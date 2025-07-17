@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+canvas {
+  background: black;
+  border: 1px solid white;
+}
+
+.controls {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.controls button, .controls input[type=range], .controls input[type=file] {
+  margin: 5px;
+}
