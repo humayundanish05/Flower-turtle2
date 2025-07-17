@@ -7,54 +7,50 @@
 </head>
 <body>
 
-  <!-- Canvas for visualizer -->
+  <!-- Visualizer Canvas -->
   <canvas id="webCanvas" width="800" height="400"></canvas>
 
-  <!-- Controls Panel -->
+  <!-- Controls Section -->
   <div class="controls">
-    
-    <!-- Play / Pause Button -->
-    <button id="toggleBtn">Pause</button>
+    <!-- Play/Pause Button -->
+    <div class="control-group">
+      <button id="toggleBtn">Pause</button>
+    </div>
 
-    <!-- Pulse Speed Slider -->
-    <label for="speedSlider">Pulse Speed:</label>
-    <input 
-      type="range" 
-      id="speedSlider" 
-      min="0.5" 
-      max="5" 
-      step="0.1" 
-      value="1"
-    >
+    <!-- Pulse Speed -->
+    <div class="control-group">
+      <label for="speedSlider">Pulse Speed:</label>
+      <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="1">
+    </div>
 
-    <!-- Visualizer Mode Select -->
-    <label for="modeSelect">Visualizer Mode:</label>
-    <select id="modeSelect">
-      <option value="wave">Wave</option>
-      <option value="circle">Circle</option>
-      <option value="heartbeat">Heartbeat</option>
-    </select>
+    <!-- Visualizer Mode -->
+    <div class="control-group">
+      <label for="modeSelect">Visualizer Mode:</label>
+      <select id="modeSelect">
+        <option value="wave">Wave</option>
+        <option value="circle">Circle</option>
+        <option value="heartbeat">Heartbeat</option>
+      </select>
+    </div>
 
-    <!-- Playlist Selector -->
-    <label for="playlist">Select a Track:</label>
-    <select id="playlist">
-      <option value="">-- Choose from playlist --</option>
-      <option value="music/track1.mp3">Track 1 - Chill Vibe</option>
-      <option value="music/track2.mp3">Track 2 - Energy Boost</option>
-      <option value="music/track3.mp3">Track 3 - Slow Beats</option>
-    </select>
+    <!-- Playlist -->
+    <div class="control-group">
+      <label for="playlist">Select a Track:</label>
+      <select id="playlist">
+        <option value="">-- Choose from playlist --</option>
+        <option value="music/track1.mp3">Track 1 - Chill Vibe</option>
+        <option value="music/track2.mp3">Track 2 - Energy Boost</option>
+        <option value="music/track3.mp3">Track 3 - Slow Beats</option>
+      </select>
+    </div>
 
-    <!-- File Upload -->
-    <label for="audioFile">Or Upload Your Own:</label>
-    <input 
-      type="file" 
-      id="audioFile" 
-      accept="audio/*"
-    >
-    
+    <!-- Upload Custom Audio -->
+    <div class="control-group">
+      <label for="audioFile">Or Upload Your Own:</label>
+      <input type="file" id="audioFile" accept="audio/*">
+    </div>
   </div>
 
-  <!-- JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>
