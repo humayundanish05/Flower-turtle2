@@ -1,13 +1,12 @@
-const canvas = document.getElementById("turtleCanvas");
+const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 ctx.translate(centerX, centerY);
 
-let h = 0;
-let angle = 0;
-let speed = 1;
 let isPaused = false;
+let angle = 0;
+let pulse = 0;
 let audioContext, audioSource, analyser, dataArray;
 
 function hsvToRgb(h, s, v) {
@@ -16,55 +15,56 @@ function hsvToRgb(h, s, v) {
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
 
-function drawFrame() {
+function drawWebPulse() {
   if (!isPaused) {
-    if (analyser) {
-      analyser.getByteFrequencyData(dataArray);
-      let average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-      speed = average / 50;
-    }
-
     ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
 
-    for (let i = 0; i < 2; i++) {
-      ctx.save();
-      ctx.rotate(angle);
-      for (let j = 0; j < 18; j++) {
-        let radius = 150 - j * 6;
-        let rgb = hsvToRgb(h, 1, 1);
-        ctx.strokeStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, Math.PI / 2);
-        ctx.stroke();
+    const layers = 10;
+    const spokes = 36;
+    const maxRadius = 300;
 
-        ctx.rotate(Math.PI / 2);
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, Math.PI / 2);
-        ctx.stroke();
-
-        ctx.rotate(Math.PI);
-        ctx.beginPath();
-        ctx.arc(0, 0, 40, Math.PI / 6, 0);
-        ctx.stroke();
-      }
-      ctx.restore();
+    if (analyser && dataArray) {
+      analyser.getByteFrequencyData(dataArray);
+      let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      pulse = 1 + average / 128;
     }
 
-    angle += 0.005 * speed;
-    h += 0.002 * speed;
-    if (h > 1) h = 0;
+    for (let layer = 0; layer < layers; layer++) {
+      let radius = (layer / layers) * maxRadius * pulse;
+      ctx.beginPath();
+      for (let i = 0; i <= spokes; i++) {
+        let theta = (i / spokes) * 2 * Math.PI;
+        let x = radius * Math.cos(theta);
+        let y = radius * Math.sin(theta);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      let h = (layer / layers + angle) % 1;
+      let [r, g, b] = hsvToRgb(h, 1, 1);
+      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < spokes; i++) {
+      let theta = (i / spokes) * 2 * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      let h = (i / spokes + angle) % 1;
+      let [r, g, b] = hsvToRgb(h, 1, 1);
+      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.lineTo(maxRadius * pulse * Math.cos(theta), maxRadius * pulse * Math.sin(theta));
+      ctx.stroke();
+    }
+
+    angle += 0.001;
   }
 
-  requestAnimationFrame(drawFrame);
+  requestAnimationFrame(drawWebPulse);
 }
 
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-});
-
-document.getElementById("speedSlider").addEventListener("input", (e) => {
-  speed = parseFloat(e.target.value);
 });
 
 document.getElementById("audioFile").addEventListener("change", function () {
@@ -89,5 +89,5 @@ document.getElementById("audioFile").addEventListener("change", function () {
   }
 });
 
-ctx.lineWidth = 1.2;
-drawFrame();
+ctx.lineWidth = 1;
+drawWebPulse();
