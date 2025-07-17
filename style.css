@@ -8,42 +8,24 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  overflow: hidden;
 }
 
 canvas {
   background: black;
   border: 2px solid #444;
   box-shadow: 0 0 20px #0ff;
-  transition: border 0.3s ease;
-}
-
-/* Canvas Drag & Drop Highlight */
-canvas.dragover {
-  border: 2px dashed #0ff;
 }
 
 .controls {
   margin-top: 20px;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.controls label {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 14px;
-  color: #0ff;
 }
 
 .controls button,
 .controls input[type="file"],
 .controls input[type="range"],
 .controls select {
-  margin: 5px 0;
+  margin: 10px;
   padding: 10px 15px;
   background-color: #1e1e1e;
   border: 1px solid #555;
@@ -65,10 +47,4 @@ canvas.dragover {
 .controls input[type="range"] {
   width: 200px;
   accent-color: #0ff;
-}
-
-.controls select {
-  background-color: #1e1e1e;
-  color: #0ff;
-  border: 1px solid #555;
 }
