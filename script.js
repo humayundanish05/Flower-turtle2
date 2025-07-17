@@ -6,20 +6,20 @@ ctx.translate(centerX, centerY);
 
 let isPaused = false;
 let angle = 0;
-let pulse = 0;
-let currentMode = "wave"; // default visualizer mode
+let pulse = 1;
 let audioContext, audioSource, analyser, dataArray;
+let currentMode = "wave";
+
+// Listen to mode changes
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  currentMode = e.target.value;
+});
 
 function hsvToRgb(h, s, v) {
   let f = (n, k = (n + h * 6) % 6) =>
     v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
-
-// Handle visualizer mode dropdown
-document.getElementById("modeSelect").addEventListener("change", (e) => {
-  currentMode = e.target.value;
-});
 
 function drawWebPulse() {
   if (!isPaused) {
@@ -35,29 +35,7 @@ function drawWebPulse() {
       pulse = 1 + average / 128;
     }
 
-    if (currentMode === "circle") {
-      for (let layer = 0; layer < layers; layer++) {
-        let radius = (layer / layers) * maxRadius * pulse;
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-        let h = (layer / layers + angle) % 1;
-        let [r, g, b] = hsvToRgb(h, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.stroke();
-      }
-    } else if (currentMode === "flower") {
-      for (let i = 0; i < spokes; i++) {
-        let theta = (i / spokes) * 2 * Math.PI;
-        ctx.beginPath();
-        let petalLength = maxRadius * pulse * Math.abs(Math.sin(angle * 3));
-        ctx.moveTo(0, 0);
-        let [r, g, b] = hsvToRgb((i / spokes + angle) % 1, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.lineTo(petalLength * Math.cos(theta), petalLength * Math.sin(theta));
-        ctx.stroke();
-      }
-    } else {
-      // Default: web/wave mode
+    if (currentMode === "wave") {
       for (let layer = 0; layer < layers; layer++) {
         let radius = (layer / layers) * maxRadius * pulse;
         ctx.beginPath();
@@ -86,17 +64,44 @@ function drawWebPulse() {
       }
     }
 
-    angle += 0.001;
+    else if (currentMode === "circle") {
+      for (let i = 0; i < layers; i++) {
+        let radius = (i + 1) * 20 * pulse;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+        let h = (i / layers + angle) % 1;
+        let [r, g, b] = hsvToRgb(h, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.stroke();
+      }
+    }
+
+    else if (currentMode === "flower") {
+      for (let i = 0; i < spokes; i++) {
+        let theta = (i / spokes) * 2 * Math.PI;
+        ctx.beginPath();
+        let petalLength = maxRadius * Math.abs(Math.sin(angle * 5)) * pulse;
+        ctx.moveTo(0, 0);
+        let [r, g, b] = hsvToRgb((i / spokes + angle) % 1, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.lineTo(petalLength * Math.cos(theta), petalLength * Math.sin(theta));
+        ctx.stroke();
+      }
+    }
+
+    angle += 0.002;
   }
 
   requestAnimationFrame(drawWebPulse);
 }
 
+// Play/pause button
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
 });
 
+// Audio upload
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (file) {
