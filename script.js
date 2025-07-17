@@ -161,4 +161,4 @@ function drawVisualizer() {
 }
 
 ctx.lineWidth = 1;
-drawVisualizer
+drawVisualizer(); // ✅ NOW it will run🗿
