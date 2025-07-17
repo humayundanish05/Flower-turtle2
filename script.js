@@ -1,100 +1,31 @@
 const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 800;
-canvas.height = 800;
-ctx.translate(canvas.width / 2, canvas.height / 2);
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+ctx.translate(centerX, centerY);
 
-let mode = "wave";
 let isPaused = false;
 let angle = 0;
 let pulse = 1;
+let speed = 1;
 let audioContext, audioSource, analyser, dataArray;
+let mode = "wave";
+let heartbeatOffset = 0;
+let heartbeatData = [];
 
-const speedSlider = document.getElementById("speedSlider");
+const colorBase = { h: 0, s: 1, v: 1 };
 
-function hsvToRgb(h, s, v) {
-  let f = (n, k = (n + h * 6) % 6) =>
-    v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
-  return [f(5) * 255, f(3) * 255, f(1) * 255];
-}
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  mode = e.target.value;
+});
 
-function drawWave() {
-  ctx.beginPath();
-  ctx.moveTo(-canvas.width / 2, 0);
-  for (let x = -canvas.width / 2; x < canvas.width / 2; x += 4) {
-    let index = Math.floor((x + canvas.width / 2) / canvas.width * dataArray.length);
-    let y = (dataArray[index] - 128) * 0.7;
-    ctx.lineTo(x, y);
-  }
-  ctx.strokeStyle = "#0ff";
-  ctx.stroke();
-}
-
-function drawCircle() {
-  const rings = 6;
-  const spokes = 5;
-  const maxRadius = 300;
-
-  for (let r = 1; r <= rings; r++) {
-    ctx.beginPath();
-    ctx.arc(0, 0, (r / rings) * maxRadius, 0, 2 * Math.PI);
-    ctx.strokeStyle = `hsl(${r * 50 + angle * 500}, 100%, 50%)`;
-    ctx.stroke();
-  }
-
-  for (let s = 0; s < spokes; s++) {
-    let theta = (s / spokes) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(maxRadius * Math.cos(theta), maxRadius * Math.sin(theta));
-    ctx.stroke();
-  }
-}
-
-function drawHeartbeat() {
-  ctx.beginPath();
-  ctx.moveTo(-canvas.width / 2, 0);
-  let beatLength = canvas.width / dataArray.length;
-  for (let i = 0; i < dataArray.length; i++) {
-    let x = i * beatLength - canvas.width / 2;
-    let y = (dataArray[i] - 128) * 1.2;
-    ctx.lineTo(x, y);
-  }
-  let color = `hsl(${angle * 360}, 100%, 50%)`;
-  ctx.strokeStyle = color;
-  ctx.stroke();
-}
-
-function draw() {
-  if (!isPaused) {
-    ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-
-    if (analyser && dataArray) {
-      analyser.getByteFrequencyData(dataArray);
-      let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      pulse = 1 + avg / 128;
-    }
-
-    ctx.save();
-    ctx.lineWidth = 2;
-
-    if (mode === "wave") drawWave();
-    else if (mode === "circle") drawCircle();
-    else if (mode === "heartbeat") drawHeartbeat();
-
-    ctx.restore();
-    angle += 0.001 * speedSlider.value;
-  }
-  requestAnimationFrame(draw);
-}
+document.getElementById("speedSlider").addEventListener("input", (e) => {
+  speed = parseFloat(e.target.value);
+});
 
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-});
-
-document.getElementById("modeSelect").addEventListener("change", (e) => {
-  mode = e.target.value;
 });
 
 document.getElementById("audioFile").addEventListener("change", function () {
@@ -119,4 +50,115 @@ document.getElementById("audioFile").addEventListener("change", function () {
   }
 });
 
-draw();
+function hsvToRgb(h, s, v) {
+  let f = (n, k = (n + h * 6) % 6) =>
+    v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+  return [f(5) * 255, f(3) * 255, f(1) * 255];
+}
+
+function getAudioPulse() {
+  if (analyser && dataArray) {
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    return 1 + avg / 128;
+  }
+  return 1;
+}
+
+function drawWave() {
+  ctx.beginPath();
+  ctx.moveTo(-centerX, 0);
+
+  if (analyser && dataArray) {
+    analyser.getByteTimeDomainData(dataArray);
+    for (let i = 0; i < dataArray.length; i++) {
+      let x = (i / dataArray.length) * canvas.width - centerX;
+      let y = ((dataArray[i] - 128) / 128) * 50;
+      ctx.lineTo(x, y);
+    }
+  } else {
+    for (let x = -centerX; x < centerX; x++) {
+      ctx.lineTo(x, Math.sin((x + angle * 100) / 50) * 20);
+    }
+  }
+
+  const [r, g, b] = hsvToRgb((angle * 10) % 1, 1, 1);
+  ctx.strokeStyle = `rgb(${r},${g},${b})`;
+  ctx.stroke();
+}
+
+function drawCircleWeb() {
+  const rings = 6;
+  const lines = 5;
+  const maxRadius = 200;
+
+  for (let i = 1; i <= rings; i++) {
+    ctx.beginPath();
+    ctx.arc(0, 0, (i / rings) * maxRadius * pulse, 0, Math.PI * 2);
+    const [r, g, b] = hsvToRgb((angle + i / rings) % 1, 1, 1);
+    ctx.strokeStyle = `rgb(${r},${g},${b})`;
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < lines; i++) {
+    let theta = (i / lines) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(
+      Math.cos(theta) * maxRadius * pulse,
+      Math.sin(theta) * maxRadius * pulse
+    );
+    const [r, g, b] = hsvToRgb((angle + i / lines) % 1, 1, 1);
+    ctx.strokeStyle = `rgb(${r},${g},${b})`;
+    ctx.stroke();
+  }
+}
+
+function drawHeartbeat() {
+  const scaleY = 100;
+  const step = 5;
+
+  if (analyser && dataArray) {
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    let beatValue = (avg - 100) * 1.2; // stronger beat
+    heartbeatData.push(beatValue);
+    if (heartbeatData.length > canvas.width) heartbeatData.shift();
+  } else {
+    heartbeatData.push(Math.sin(angle * 5) * 50);
+    if (heartbeatData.length > canvas.width) heartbeatData.shift();
+  }
+
+  ctx.save();
+  ctx.translate(-centerX, 0);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+
+  for (let i = 0; i < heartbeatData.length; i++) {
+    ctx.lineTo(i, -heartbeatData[i]);
+  }
+
+  const [r, g, b] = hsvToRgb((angle * 2) % 1, 1, 1);
+  ctx.strokeStyle = `rgb(${r},${g},${b})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawVisualizer() {
+  if (!isPaused) {
+    ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
+    pulse = getAudioPulse();
+
+    if (mode === "wave") drawWave();
+    else if (mode === "circle") drawCircleWeb();
+    else if (mode === "heartbeat") drawHeartbeat();
+
+    angle += 0.002 * speed;
+  }
+
+  requestAnimationFrame(drawVisualizer);
+}
+
+ctx.lineWidth = 1;
+drawVisualizer
