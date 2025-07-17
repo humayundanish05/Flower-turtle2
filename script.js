@@ -62,30 +62,55 @@ function drawWebPulse() {
   requestAnimationFrame(drawWebPulse);
 }
 
+function loadAudio(file) {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioContext.decodeAudioData(e.target.result, function (buffer) {
+      if (audioSource) audioSource.stop();
+      audioSource = audioContext.createBufferSource();
+      analyser = audioContext.createAnalyser();
+      audioSource.buffer = buffer;
+      audioSource.connect(analyser);
+      analyser.connect(audioContext.destination);
+      analyser.fftSize = 256;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      audioSource.start();
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Button toggle (Play/Pause)
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
 });
 
+// File input upload
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      audioContext.decodeAudioData(e.target.result, function (buffer) {
-        if (audioSource) audioSource.stop();
-        audioSource = audioContext.createBufferSource();
-        analyser = audioContext.createAnalyser();
-        audioSource.buffer = buffer;
-        audioSource.connect(analyser);
-        analyser.connect(audioContext.destination);
-        analyser.fftSize = 256;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-        audioSource.start();
-      });
-    };
-    reader.readAsArrayBuffer(file);
+    loadAudio(file);
+  }
+});
+
+// 🎯 Drag & Drop Upload
+canvas.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  canvas.style.border = "2px dashed #0ff";
+});
+
+canvas.addEventListener("dragleave", () => {
+  canvas.style.border = "none";
+});
+
+canvas.addEventListener("drop", (e) => {
+  e.preventDefault();
+  canvas.style.border = "none";
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("audio")) {
+    loadAudio(file);
   }
 });
 
