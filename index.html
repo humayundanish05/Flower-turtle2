@@ -1,38 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Pulsing Web Visualizer</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Visualizer with Modes</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <canvas id="webCanvas" width="1000" height="400"></canvas>
 
-  <!-- 🎨 Visualizer Canvas -->
-  <canvas id="webCanvas" width="800" height="800"></canvas>
-
-  <!-- 🎛️ Controls Section -->
   <div class="controls">
-    <!-- ⏯️ Play/Pause Button -->
     <button id="toggleBtn">Pause</button>
 
-    <!-- 🔄 Speed Slider -->
     <label for="speedSlider">Pulse Speed:</label>
     <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="1">
 
-    <!-- 🎚️ Mode Selector (future use) -->
     <label for="modeSelect">Visualizer Mode:</label>
     <select id="modeSelect">
       <option value="wave">Wave</option>
       <option value="circle">Circle</option>
       <option value="flower">Flower</option>
+      <option value="heartbeat">Heartbeat</option>
     </select>
 
-    <!-- 🎵 Upload Audio -->
-    <label for="audioFile">Upload Audio (MP3/WAV):</label>
-    <input type="file" id="audioFile" accept="audio/*">
+    <input type="file" id="audioFile" accept="audio/*" />
   </div>
 
-  <!-- 📜 JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>
