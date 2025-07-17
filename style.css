@@ -1,5 +1,7 @@
+/* === Base Styling === */
 body {
   margin: 0;
+  padding: 0;
   background: black;
   color: white;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -7,44 +9,83 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
+/* === Canvas Styling === */
 canvas {
   background: black;
   border: 2px solid #444;
   box-shadow: 0 0 20px #0ff;
+  max-width: 100%;
 }
 
+/* === Control Panel === */
 .controls {
   margin-top: 20px;
   text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background: #111;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0ff3;
 }
 
+/* === Input & Button Styling === */
 .controls button,
 .controls input[type="file"],
 .controls input[type="range"],
-.controls select {
-  margin: 10px;
-  padding: 10px 15px;
+.controls select,
+.controls label {
+  font-size: 16px;
+  color: white;
   background-color: #1e1e1e;
   border: 1px solid #555;
-  color: #fff;
   border-radius: 8px;
-  font-size: 16px;
-  transition: 0.3s ease;
+  padding: 10px 15px;
+  margin: 5px;
+  transition: all 0.3s ease;
   cursor: pointer;
-}
-
-.controls button:hover,
-.controls input[type="file"]:hover,
-.controls select:hover {
-  background-color: #333;
-  border-color: #0ff;
-  box-shadow: 0 0 10px #0ff;
 }
 
 .controls input[type="range"] {
   width: 200px;
   accent-color: #0ff;
+  background-color: transparent;
+}
+
+/* === Hover Effects === */
+.controls button:hover,
+.controls input[type="file"]:hover,
+.controls select:hover,
+.controls label:hover {
+  background-color: #333;
+  border-color: #0ff;
+  box-shadow: 0 0 10px #0ff;
+}
+
+/* === Label Styling === */
+.controls label {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 5px;
+  font-weight: bold;
+  cursor: default;
+}
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .controls input[type="range"] {
+    width: 100%;
+  }
 }
