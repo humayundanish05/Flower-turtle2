@@ -7,6 +7,7 @@ ctx.translate(centerX, centerY);
 let isPaused = false;
 let angle = 0;
 let pulse = 0;
+let currentMode = "wave"; // default visualizer mode
 let audioContext, audioSource, analyser, dataArray;
 
 function hsvToRgb(h, s, v) {
@@ -14,6 +15,11 @@ function hsvToRgb(h, s, v) {
     v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
+
+// Handle visualizer mode dropdown
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  currentMode = e.target.value;
+});
 
 function drawWebPulse() {
   if (!isPaused) {
@@ -29,7 +35,6 @@ function drawWebPulse() {
       pulse = 1 + average / 128;
     }
 
-    // 💡 Apply mode variations
     if (currentMode === "circle") {
       for (let layer = 0; layer < layers; layer++) {
         let radius = (layer / layers) * maxRadius * pulse;
@@ -52,7 +57,7 @@ function drawWebPulse() {
         ctx.stroke();
       }
     } else {
-      // default: wave web pattern (your original)
+      // Default: web/wave mode
       for (let layer = 0; layer < layers; layer++) {
         let radius = (layer / layers) * maxRadius * pulse;
         ctx.beginPath();
@@ -87,55 +92,30 @@ function drawWebPulse() {
   requestAnimationFrame(drawWebPulse);
 }
 
-function loadAudio(file) {
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContext.decodeAudioData(e.target.result, function (buffer) {
-      if (audioSource) audioSource.stop();
-      audioSource = audioContext.createBufferSource();
-      analyser = audioContext.createAnalyser();
-      audioSource.buffer = buffer;
-      audioSource.connect(analyser);
-      analyser.connect(audioContext.destination);
-      analyser.fftSize = 256;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      audioSource.start();
-    });
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// Button toggle (Play/Pause)
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
 });
 
-// File input upload
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (file) {
-    loadAudio(file);
-  }
-});
-
-// 🎯 Drag & Drop Upload
-canvas.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  canvas.style.border = "2px dashed #0ff";
-});
-
-canvas.addEventListener("dragleave", () => {
-  canvas.style.border = "none";
-});
-
-canvas.addEventListener("drop", (e) => {
-  e.preventDefault();
-  canvas.style.border = "none";
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("audio")) {
-    loadAudio(file);
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContext.decodeAudioData(e.target.result, function (buffer) {
+        if (audioSource) audioSource.stop();
+        audioSource = audioContext.createBufferSource();
+        analyser = audioContext.createAnalyser();
+        audioSource.buffer = buffer;
+        audioSource.connect(analyser);
+        analyser.connect(audioContext.destination);
+        analyser.fftSize = 256;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        audioSource.start();
+      });
+    };
+    reader.readAsArrayBuffer(file);
   }
 });
 
