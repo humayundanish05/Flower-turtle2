@@ -5,27 +5,130 @@ const centerY = canvas.height / 2;
 ctx.translate(centerX, centerY);
 
 let isPaused = false;
+let mode = "wave";
 let angle = 0;
 let pulse = 1;
-let speed = 1;
 let audioContext, audioSource, analyser, dataArray;
-let mode = "wave";
-let heartbeatOffset = 0;
-let heartbeatData = [];
 
-const colorBase = { h: 0, s: 1, v: 1 };
+// Helper
+function hsvToRgb(h, s, v) {
+  let f = (n, k = (n + h * 6) % 6) =>
+    v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+  return [f(5) * 255, f(3) * 255, f(1) * 255];
+}
 
-document.getElementById("modeSelect").addEventListener("change", (e) => {
-  mode = e.target.value;
-});
+function draw() {
+  if (!isPaused) {
+    ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
 
-document.getElementById("speedSlider").addEventListener("input", (e) => {
-  speed = parseFloat(e.target.value);
-});
+    if (analyser && dataArray) {
+      analyser.getByteFrequencyData(dataArray);
+      let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      pulse = 1 + avg / 128;
+    }
+
+    if (mode === "wave") drawWave();
+    else if (mode === "circle") drawCircleWeb();
+    else if (mode === "heartbeat") drawHeartbeat();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// ----- MODE FUNCTIONS -----
+
+function drawWave() {
+  ctx.beginPath();
+  const length = canvas.width;
+  const midY = 0;
+  const sliceWidth = (canvas.width / dataArray.length) * 2;
+  let x = -centerX;
+
+  for (let i = 0; i < dataArray.length; i++) {
+    let v = dataArray[i] / 128.0;
+    let y = (v * 100 - 100) * pulse * 0.5;
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+
+    x += sliceWidth;
+  }
+
+  let [r, g, b] = hsvToRgb(angle % 1, 1, 1);
+  ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  angle += 0.002;
+}
+
+function drawCircleWeb() {
+  const layers = 5;
+  const spokes = 5;
+  const radiusStep = 50;
+
+  // Draw concentric circles
+  for (let i = 1; i <= layers; i++) {
+    let radius = i * radiusStep;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    let [r, g, b] = hsvToRgb((angle + i * 0.1) % 1, 1, 1);
+    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.stroke();
+  }
+
+  // Draw straight lines
+  for (let i = 0; i < spokes; i++) {
+    let theta = (i / spokes) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(
+      radiusStep * layers * Math.cos(theta),
+      radiusStep * layers * Math.sin(theta)
+    );
+    let [r, g, b] = hsvToRgb((angle + i * 0.2) % 1, 1, 1);
+    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.stroke();
+  }
+
+  angle += 0.001;
+}
+
+function drawHeartbeat() {
+  const baseY = 0;
+  const width = 800;
+  const xStep = 10;
+  let x = -centerX;
+
+  ctx.beginPath();
+  ctx.moveTo(x, baseY);
+
+  for (let i = 0; i < width; i += xStep) {
+    let beat = dataArray ? dataArray[i % dataArray.length] / 255 : 0.1;
+    let y = 0;
+    if (i % 100 === 0) {
+      y = -100 * beat * pulse; // Strong peak
+    } else if (i % 80 === 0) {
+      y = -50 * beat * pulse;
+    }
+    ctx.lineTo(x + i, y);
+  }
+
+  let [r, g, b] = hsvToRgb(angle % 1, 1, 1);
+  ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  angle += 0.003;
+}
+
+// ----- UI Controls -----
 
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
+});
+
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  mode = e.target.value;
 });
 
 document.getElementById("audioFile").addEventListener("change", function () {
@@ -33,7 +136,9 @@ document.getElementById("audioFile").addEventListener("change", function () {
   if (file) {
     const reader = new FileReader();
     reader.onload = function (e) {
-      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
       audioContext.decodeAudioData(e.target.result, function (buffer) {
         if (audioSource) audioSource.stop();
         audioSource = audioContext.createBufferSource();
@@ -50,115 +155,6 @@ document.getElementById("audioFile").addEventListener("change", function () {
   }
 });
 
-function hsvToRgb(h, s, v) {
-  let f = (n, k = (n + h * 6) % 6) =>
-    v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
-  return [f(5) * 255, f(3) * 255, f(1) * 255];
-}
-
-function getAudioPulse() {
-  if (analyser && dataArray) {
-    analyser.getByteFrequencyData(dataArray);
-    let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    return 1 + avg / 128;
-  }
-  return 1;
-}
-
-function drawWave() {
-  ctx.beginPath();
-  ctx.moveTo(-centerX, 0);
-
-  if (analyser && dataArray) {
-    analyser.getByteTimeDomainData(dataArray);
-    for (let i = 0; i < dataArray.length; i++) {
-      let x = (i / dataArray.length) * canvas.width - centerX;
-      let y = ((dataArray[i] - 128) / 128) * 50;
-      ctx.lineTo(x, y);
-    }
-  } else {
-    for (let x = -centerX; x < centerX; x++) {
-      ctx.lineTo(x, Math.sin((x + angle * 100) / 50) * 20);
-    }
-  }
-
-  const [r, g, b] = hsvToRgb((angle * 10) % 1, 1, 1);
-  ctx.strokeStyle = `rgb(${r},${g},${b})`;
-  ctx.stroke();
-}
-
-function drawCircleWeb() {
-  const rings = 6;
-  const lines = 5;
-  const maxRadius = 200;
-
-  for (let i = 1; i <= rings; i++) {
-    ctx.beginPath();
-    ctx.arc(0, 0, (i / rings) * maxRadius * pulse, 0, Math.PI * 2);
-    const [r, g, b] = hsvToRgb((angle + i / rings) % 1, 1, 1);
-    ctx.strokeStyle = `rgb(${r},${g},${b})`;
-    ctx.stroke();
-  }
-
-  for (let i = 0; i < lines; i++) {
-    let theta = (i / lines) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(
-      Math.cos(theta) * maxRadius * pulse,
-      Math.sin(theta) * maxRadius * pulse
-    );
-    const [r, g, b] = hsvToRgb((angle + i / lines) % 1, 1, 1);
-    ctx.strokeStyle = `rgb(${r},${g},${b})`;
-    ctx.stroke();
-  }
-}
-
-function drawHeartbeat() {
-  const scaleY = 100;
-  const step = 5;
-
-  if (analyser && dataArray) {
-    analyser.getByteFrequencyData(dataArray);
-    let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    let beatValue = (avg - 100) * 1.2; // stronger beat
-    heartbeatData.push(beatValue);
-    if (heartbeatData.length > canvas.width) heartbeatData.shift();
-  } else {
-    heartbeatData.push(Math.sin(angle * 5) * 50);
-    if (heartbeatData.length > canvas.width) heartbeatData.shift();
-  }
-
-  ctx.save();
-  ctx.translate(-centerX, 0);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-
-  for (let i = 0; i < heartbeatData.length; i++) {
-    ctx.lineTo(i, -heartbeatData[i]);
-  }
-
-  const [r, g, b] = hsvToRgb((angle * 2) % 1, 1, 1);
-  ctx.strokeStyle = `rgb(${r},${g},${b})`;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawVisualizer() {
-  if (!isPaused) {
-    ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
-    pulse = getAudioPulse();
-
-    if (mode === "wave") drawWave();
-    else if (mode === "circle") drawCircleWeb();
-    else if (mode === "heartbeat") drawHeartbeat();
-
-    angle += 0.002 * speed;
-  }
-
-  requestAnimationFrame(drawVisualizer);
-}
-
-ctx.lineWidth = 1;
-drawVisualizer();
+// ----- Start -----
+ctx.lineWidth = 2;
+draw();
