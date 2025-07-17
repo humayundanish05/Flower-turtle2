@@ -10,17 +10,102 @@ let speed = 1;
 let currentMode = "wave";
 let audioContext, audioSource, analyser, dataArray;
 
+// 🌈 HSV to RGB
 function hsvToRgb(h, s, v) {
   let f = (n, k = (n + h * 6) % 6) =>
     v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
 
-// ---------- Drawing Modes ---------- //
-function drawWave() {
+// 🎵 Audio load
+document.getElementById("audioFile").addEventListener("change", function () {
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContext.decodeAudioData(e.target.result, function (buffer) {
+        if (audioSource) audioSource.stop();
+        audioSource = audioContext.createBufferSource();
+        analyser = audioContext.createAnalyser();
+        audioSource.buffer = buffer;
+        audioSource.connect(analyser);
+        analyser.connect(audioContext.destination);
+        analyser.fftSize = 256;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        audioSource.start();
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+// 🎛 Controls
+document.getElementById("toggleBtn").addEventListener("click", () => {
+  isPaused = !isPaused;
+  document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
+});
+
+document.getElementById("speedSlider").addEventListener("input", (e) => {
+  speed = parseFloat(e.target.value);
+});
+
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  currentMode = e.target.value;
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // clear for mode switch
+});
+
+// 🎨 Drawing loop
+function drawVisualizer() {
+  if (!isPaused) {
+    if (analyser && dataArray) {
+      analyser.getByteFrequencyData(dataArray);
+      let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      pulse = 1 + average / 128;
+    }
+
+    if (currentMode === "wave") {
+      drawWaveform();
+    } else if (currentMode === "circle") {
+      drawCircle();
+    } else if (currentMode === "flower") {
+      drawFlower();
+    } else if (currentMode === "heartbeat") {
+      drawHeartbeat();
+    }
+
+    angle += 0.001 * speed;
+  }
+
+  requestAnimationFrame(drawVisualizer);
+}
+
+// 📈 Waveform Mode
+function drawWaveform() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#0ff";
+
+  for (let i = 0; i < dataArray.length; i++) {
+    let x = (i / dataArray.length) * canvas.width;
+    let y = canvas.height / 2 + (dataArray[i] - 128) * 1;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  ctx.stroke();
+}
+
+// 🌀 Circle Mode
+function drawCircle() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(centerX, centerY);
+
   const layers = 10;
   const spokes = 36;
-  const maxRadius = 300;
+  const maxRadius = 200;
 
   for (let layer = 0; layer < layers; layer++) {
     let radius = (layer / layers) * maxRadius * pulse;
@@ -37,132 +122,71 @@ function drawWave() {
     ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
     ctx.stroke();
   }
+
+  ctx.restore();
 }
 
-function drawCircle() {
-  let radius = 150 * pulse;
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-  ctx.strokeStyle = `hsl(${angle * 360}, 100%, 50%)`;
-  ctx.stroke();
+// 🌸 Flower Mode
+function drawFlower() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(centerX, centerY);
+
+  ctx.lineWidth = 1.5;
+  const petals = 36;
+  const radius = 180;
+
+  for (let i = 0; i < petals; i++) {
+    let theta = (i / petals) * 2 * Math.PI;
+    let x = radius * Math.cos(theta) * Math.sin(angle * 3 + i);
+    let y = radius * Math.sin(theta) * Math.sin(angle * 3 + i);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    let h = (i / petals + angle) % 1;
+    let [r, g, b] = hsvToRgb(h, 1, 1);
+    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.lineTo(x * pulse, y * pulse);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
+// 🫀 Heartbeat Mode (Hospital ECG-style)
+let beatY = canvas.height / 2;
 function drawHeartbeat() {
-  const scrollWidth = 2;
-  const height = canvas.height;
+  const scrollSpeed = 2;
 
-  const imageData = ctx.getImageData(scrollWidth, 0, canvas.width - scrollWidth, height);
-  ctx.putImageData(imageData, 0, 0);
-  ctx.clearRect(canvas.width - scrollWidth, 0, scrollWidth, height);
+  // Scroll canvas left
+  const imgData = ctx.getImageData(scrollSpeed, 0, canvas.width - scrollSpeed, canvas.height);
+  ctx.putImageData(imgData, 0, 0);
+  ctx.clearRect(canvas.width - scrollSpeed, 0, scrollSpeed, canvas.height);
 
-  let y = height / 2;
+  // Calculate beat intensity
+  let level = 0;
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    if (avg > 180) y -= 40;        // strong beat
-    else if (avg > 100) y += 30;   // lower dip
+    let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    level = avg / 255;
   }
 
-  ctx.fillStyle = "lime";
-  ctx.shadowColor = "lime";
+  // Determine spike
+  const midY = canvas.height / 2;
+  if (level > 0.4) beatY = midY - 60;
+  else if (level > 0.3) beatY = midY + 30;
+  else beatY = midY;
+
+  // Draw line
+  ctx.beginPath();
+  ctx.moveTo(canvas.width - scrollSpeed * 2, beatY);
+  ctx.lineTo(canvas.width, beatY);
+  ctx.strokeStyle = "lime";
+  ctx.lineWidth = 2;
   ctx.shadowBlur = 10;
-  ctx.fillRect(canvas.width - scrollWidth, y, scrollWidth, 2);
-  ctx.shadowBlur = 0; // reset
+  ctx.shadowColor = "lime";
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 }
 
-function drawVisualizer() {
-  if (!isPaused) {
-    if (currentMode !== "heartbeat") {
-      ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
-    }
-
-    if (analyser && dataArray) {
-      analyser.getByteFrequencyData(dataArray);
-      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      pulse = 1 + average / 128;
-    }
-
-    ctx.save();
-    ctx.translate(centerX, centerY);
-
-    switch (currentMode) {
-      case "wave":
-        drawWave();
-        break;
-      case "circle":
-        drawCircle();
-        break;
-      case "heartbeat":
-        drawHeartbeat();
-        break;
-    }
-
-    ctx.restore();
-    angle += 0.002 * speed;
-  }
-
-  requestAnimationFrame(drawVisualizer);
-}
-
-// ---------- Controls & Events ---------- //
-document.getElementById("toggleBtn").addEventListener("click", () => {
-  isPaused = !isPaused;
-  document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-});
-
-document.getElementById("speedSlider").addEventListener("input", (e) => {
-  speed = parseFloat(e.target.value);
-});
-
-document.getElementById("modeSelect").addEventListener("change", (e) => {
-  currentMode = e.target.value;
-  if (currentMode !== "heartbeat") {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // clear full
-  }
-});
-
-document.getElementById("audioFile").addEventListener("change", function () {
-  const file = this.files[0];
-  if (file) loadAudio(file);
-});
-
-function loadAudio(file) {
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    if (!audioContext)
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContext.decodeAudioData(e.target.result, function (buffer) {
-      if (audioSource) audioSource.stop();
-      audioSource = audioContext.createBufferSource();
-      analyser = audioContext.createAnalyser();
-      audioSource.buffer = buffer;
-      audioSource.connect(analyser);
-      analyser.connect(audioContext.destination);
-      analyser.fftSize = 256;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      audioSource.start();
-    });
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ---------- Drag & Drop Upload ---------- //
-canvas.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  canvas.style.border = "2px dashed #0ff";
-});
-canvas.addEventListener("dragleave", () => {
-  canvas.style.border = "none";
-});
-canvas.addEventListener("drop", (e) => {
-  e.preventDefault();
-  canvas.style.border = "none";
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("audio")) {
-    loadAudio(file);
-  }
-});
-
-// ---------- Init ---------- //
-ctx.lineWidth = 1;
 drawVisualizer();
