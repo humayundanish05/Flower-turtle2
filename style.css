@@ -1,91 +1,86 @@
-/* === Base Styling === */
 body {
   margin: 0;
-  padding: 0;
-  background: black;
-  color: white;
+  background: #000;
+  color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  overflow: hidden;
+  height: 100vh;
 }
 
-/* === Canvas Styling === */
+.container {
+  text-align: center;
+  width: 90%;
+  max-width: 1000px;
+}
+
+.title {
+  font-size: 2em;
+  color: #0ff;
+  margin-bottom: 20px;
+  text-shadow: 0 0 15px #0ff;
+}
+
 canvas {
   background: black;
-  border: 2px solid #444;
+  border: 2px solid #222;
   box-shadow: 0 0 20px #0ff;
-  max-width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
 }
 
-/* === Control Panel === */
 .controls {
-  margin-top: 20px;
-  text-align: center;
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.controls .row {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  padding: 10px;
-  background: #111;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #0ff3;
+  gap: 15px;
 }
 
-/* === Input & Button Styling === */
 .controls button,
-.controls input[type="file"],
-.controls input[type="range"],
 .controls select,
-.controls label {
-  font-size: 16px;
-  color: white;
-  background-color: #1e1e1e;
-  border: 1px solid #555;
-  border-radius: 8px;
+.controls input[type="range"] {
   padding: 10px 15px;
-  margin: 5px;
-  transition: all 0.3s ease;
+  border: 1px solid #555;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: 0.3s ease;
   cursor: pointer;
 }
 
-.controls input[type="range"] {
-  width: 200px;
-  accent-color: #0ff;
-  background-color: transparent;
-}
-
-/* === Hover Effects === */
 .controls button:hover,
-.controls input[type="file"]:hover,
-.controls select:hover,
-.controls label:hover {
+.controls select:hover {
   background-color: #333;
   border-color: #0ff;
   box-shadow: 0 0 10px #0ff;
 }
 
-/* === Label Styling === */
-.controls label {
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0 5px;
-  font-weight: bold;
-  cursor: default;
+.controls input[type="range"] {
+  width: 180px;
+  accent-color: #0ff;
 }
 
-/* === Responsive === */
-@media (max-width: 600px) {
-  .controls {
-    flex-direction: column;
-    gap: 15px;
-  }
+.file-label {
+  background-color: #0ff;
+  color: #000;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
-  .controls input[type="range"] {
-    width: 100%;
-  }
+.file-label:hover {
+  background-color: #00cccc;
+  box-shadow: 0 0 10px #0ff;
 }
