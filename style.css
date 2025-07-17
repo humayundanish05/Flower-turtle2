@@ -1,86 +1,123 @@
-body {
+/* Reset */
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+/* Body Layout */
+body {
   background: #000;
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
+  padding: 40px 20px;
+  min-height: 100vh;
 }
 
-.container {
-  text-align: center;
-  width: 90%;
-  max-width: 1000px;
-}
-
-.title {
-  font-size: 2em;
-  color: #0ff;
-  margin-bottom: 20px;
-  text-shadow: 0 0 15px #0ff;
-}
-
+/* Canvas */
 canvas {
-  background: black;
-  border: 2px solid #222;
-  box-shadow: 0 0 20px #0ff;
+  background: #111;
+  border: 2px solid #333;
   border-radius: 12px;
-  display: block;
-  margin: 0 auto;
+  box-shadow: 0 0 25px #0ff;
+  max-width: 100%;
 }
 
+/* Controls Container */
 .controls {
-  margin-top: 25px;
+  margin-top: 30px;
+  padding: 20px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.controls .row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  align-items: center;
   gap: 15px;
+  width: 90%;
+  max-width: 800px;
 }
 
-.controls button,
-.controls select,
-.controls input[type="range"] {
-  padding: 10px 15px;
-  border: 1px solid #555;
-  background: #1a1a1a;
-  color: #fff;
-  border-radius: 8px;
+/* Labels */
+.controls label {
   font-size: 16px;
+  margin-bottom: 4px;
+  color: #0ff;
+}
+
+/* Inputs and Buttons */
+.controls input[type="range"],
+.controls input[type="file"],
+.controls select,
+.controls button {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 15px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
   transition: 0.3s ease;
   cursor: pointer;
 }
 
 .controls button:hover,
-.controls select:hover {
+.controls input[type="file"]:hover,
+.controls select:hover,
+.controls input[type="range"]:hover {
   background-color: #333;
   border-color: #0ff;
   box-shadow: 0 0 10px #0ff;
 }
 
+/* Range Styling */
 .controls input[type="range"] {
-  width: 180px;
+  -webkit-appearance: none;
+  height: 8px;
+  background: #0ff;
+  border-radius: 5px;
+  outline: none;
   accent-color: #0ff;
 }
 
-.file-label {
-  background-color: #0ff;
-  color: #000;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: bold;
+.controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
   cursor: pointer;
-  transition: 0.3s;
+  border: 2px solid #0ff;
 }
 
-.file-label:hover {
-  background-color: #00cccc;
-  box-shadow: 0 0 10px #0ff;
+.controls input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: 2px solid #0ff;
+}
+
+/* Responsive Layout */
+@media (max-width: 600px) {
+  .controls {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .controls input,
+  .controls select,
+  .controls button {
+    max-width: 100%;
+  }
+
+  canvas {
+    height: 300px;
+  }
 }
