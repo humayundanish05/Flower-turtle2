@@ -1,19 +1,14 @@
 const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
-ctx.translate(centerX, centerY);
+let centerX = canvas.width / 2;
+let centerY = canvas.height / 2;
 
 let isPaused = false;
 let angle = 0;
 let pulse = 1;
+let speed = 1;
 let audioContext, audioSource, analyser, dataArray;
 let currentMode = "wave";
-
-// Listen to mode changes
-document.getElementById("modeSelect").addEventListener("change", (e) => {
-  currentMode = e.target.value;
-});
 
 function hsvToRgb(h, s, v) {
   let f = (n, k = (n + h * 6) % 6) =>
@@ -21,87 +16,19 @@ function hsvToRgb(h, s, v) {
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
 
-function drawWebPulse() {
-  if (!isPaused) {
-    ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
+document.getElementById("modeSelect").addEventListener("change", (e) => {
+  currentMode = e.target.value;
+});
 
-    const layers = 10;
-    const spokes = 36;
-    const maxRadius = 300;
+document.getElementById("speedSlider").addEventListener("input", (e) => {
+  speed = parseFloat(e.target.value);
+});
 
-    if (analyser && dataArray) {
-      analyser.getByteFrequencyData(dataArray);
-      let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      pulse = 1 + average / 128;
-    }
-
-    if (currentMode === "wave") {
-      for (let layer = 0; layer < layers; layer++) {
-        let radius = (layer / layers) * maxRadius * pulse;
-        ctx.beginPath();
-        for (let i = 0; i <= spokes; i++) {
-          let theta = (i / spokes) * 2 * Math.PI;
-          let x = radius * Math.cos(theta);
-          let y = radius * Math.sin(theta);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        let h = (layer / layers + angle) % 1;
-        let [r, g, b] = hsvToRgb(h, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.stroke();
-      }
-
-      for (let i = 0; i < spokes; i++) {
-        let theta = (i / spokes) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        let h = (i / spokes + angle) % 1;
-        let [r, g, b] = hsvToRgb(h, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.lineTo(maxRadius * pulse * Math.cos(theta), maxRadius * pulse * Math.sin(theta));
-        ctx.stroke();
-      }
-    }
-
-    else if (currentMode === "circle") {
-      for (let i = 0; i < layers; i++) {
-        let radius = (i + 1) * 20 * pulse;
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-        let h = (i / layers + angle) % 1;
-        let [r, g, b] = hsvToRgb(h, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.stroke();
-      }
-    }
-
-    else if (currentMode === "flower") {
-      for (let i = 0; i < spokes; i++) {
-        let theta = (i / spokes) * 2 * Math.PI;
-        ctx.beginPath();
-        let petalLength = maxRadius * Math.abs(Math.sin(angle * 5)) * pulse;
-        ctx.moveTo(0, 0);
-        let [r, g, b] = hsvToRgb((i / spokes + angle) % 1, 1, 1);
-        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.lineTo(petalLength * Math.cos(theta), petalLength * Math.sin(theta));
-        ctx.stroke();
-      }
-    }
-
-    angle += 0.002;
-  }
-
-  requestAnimationFrame(drawWebPulse);
-}
-
-// Play/pause button
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
 });
 
-// Audio upload
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (file) {
@@ -124,5 +51,85 @@ document.getElementById("audioFile").addEventListener("change", function () {
   }
 });
 
-ctx.lineWidth = 1;
+function drawWebPulse() {
+  if (!isPaused) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (analyser && dataArray) {
+      analyser.getByteFrequencyData(dataArray);
+      let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      pulse = 1 + average / 128;
+    }
+
+    if (currentMode === "wave") {
+      ctx.beginPath();
+      for (let i = 0; i < dataArray.length; i++) {
+        let x = (i / dataArray.length) * canvas.width;
+        let y = canvas.height / 2 + (dataArray[i] - 128) * 0.8;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "#0ff";
+      ctx.stroke();
+    }
+
+    else if (currentMode === "circle") {
+      const radius = 150 * pulse;
+      const segments = 60;
+      ctx.beginPath();
+      for (let i = 0; i <= segments; i++) {
+        const theta = (i / segments) * 2 * Math.PI;
+        const x = centerX + radius * Math.cos(theta);
+        const y = centerY + radius * Math.sin(theta);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "#ff0";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    else if (currentMode === "flower") {
+      const petals = 12;
+      const radius = 120 * pulse;
+      for (let i = 0; i < petals; i++) {
+        let theta = (i / petals) * 2 * Math.PI + angle;
+        let x = centerX + radius * Math.cos(theta);
+        let y = centerY + radius * Math.sin(theta);
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = `hsl(${i * 30}, 100%, 50%)`;
+        ctx.stroke();
+      }
+    }
+
+    else if (currentMode === "heartbeat") {
+      analyser.getByteTimeDomainData(dataArray);
+
+      // Scroll canvas like ECG monitor
+      const scrollSpeed = 2 * speed;
+      const imageData = ctx.getImageData(scrollSpeed, 0, canvas.width - scrollSpeed, canvas.height);
+      ctx.putImageData(imageData, 0, 0);
+
+      // Clear right side
+      ctx.fillStyle = "black";
+      ctx.fillRect(canvas.width - scrollSpeed, 0, scrollSpeed, canvas.height);
+
+      // Draw beat line
+      ctx.beginPath();
+      ctx.moveTo(canvas.width - scrollSpeed, centerY);
+      for (let i = 0; i < dataArray.length; i++) {
+        const y = (dataArray[i] / 255.0) * 100;
+        ctx.lineTo(canvas.width - dataArray.length + i, y + centerY - 50);
+      }
+      ctx.strokeStyle = "#0f0";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    angle += 0.01 * speed;
+  }
+
+  requestAnimationFrame(drawWebPulse);
+}
+
 drawWebPulse();
