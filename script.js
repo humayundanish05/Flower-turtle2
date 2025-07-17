@@ -29,31 +29,56 @@ function drawWebPulse() {
       pulse = 1 + average / 128;
     }
 
-    for (let layer = 0; layer < layers; layer++) {
-      let radius = (layer / layers) * maxRadius * pulse;
-      ctx.beginPath();
-      for (let i = 0; i <= spokes; i++) {
-        let theta = (i / spokes) * 2 * Math.PI;
-        let x = radius * Math.cos(theta);
-        let y = radius * Math.sin(theta);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+    // 💡 Apply mode variations
+    if (currentMode === "circle") {
+      for (let layer = 0; layer < layers; layer++) {
+        let radius = (layer / layers) * maxRadius * pulse;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+        let h = (layer / layers + angle) % 1;
+        let [r, g, b] = hsvToRgb(h, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.stroke();
       }
-      let h = (layer / layers + angle) % 1;
-      let [r, g, b] = hsvToRgb(h, 1, 1);
-      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-      ctx.stroke();
-    }
+    } else if (currentMode === "flower") {
+      for (let i = 0; i < spokes; i++) {
+        let theta = (i / spokes) * 2 * Math.PI;
+        ctx.beginPath();
+        let petalLength = maxRadius * pulse * Math.abs(Math.sin(angle * 3));
+        ctx.moveTo(0, 0);
+        let [r, g, b] = hsvToRgb((i / spokes + angle) % 1, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.lineTo(petalLength * Math.cos(theta), petalLength * Math.sin(theta));
+        ctx.stroke();
+      }
+    } else {
+      // default: wave web pattern (your original)
+      for (let layer = 0; layer < layers; layer++) {
+        let radius = (layer / layers) * maxRadius * pulse;
+        ctx.beginPath();
+        for (let i = 0; i <= spokes; i++) {
+          let theta = (i / spokes) * 2 * Math.PI;
+          let x = radius * Math.cos(theta);
+          let y = radius * Math.sin(theta);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        let h = (layer / layers + angle) % 1;
+        let [r, g, b] = hsvToRgb(h, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.stroke();
+      }
 
-    for (let i = 0; i < spokes; i++) {
-      let theta = (i / spokes) * 2 * Math.PI;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      let h = (i / spokes + angle) % 1;
-      let [r, g, b] = hsvToRgb(h, 1, 1);
-      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-      ctx.lineTo(maxRadius * pulse * Math.cos(theta), maxRadius * pulse * Math.sin(theta));
-      ctx.stroke();
+      for (let i = 0; i < spokes; i++) {
+        let theta = (i / spokes) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        let h = (i / spokes + angle) % 1;
+        let [r, g, b] = hsvToRgb(h, 1, 1);
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.lineTo(maxRadius * pulse * Math.cos(theta), maxRadius * pulse * Math.sin(theta));
+        ctx.stroke();
+      }
     }
 
     angle += 0.001;
