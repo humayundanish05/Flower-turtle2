@@ -121,7 +121,7 @@ function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
     let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    let beatValue = (avg - 100) * 1.2; // stronger beat
+    let beatValue = (avg - 100) * 1.2;
     heartbeatData.push(beatValue);
     if (heartbeatData.length > canvas.width) heartbeatData.shift();
   } else {
@@ -161,4 +161,4 @@ function drawVisualizer() {
 }
 
 ctx.lineWidth = 1;
-drawVisualizer(); // ✅ NOW it will run🗿
+drawVisualizer(); // ✅ FIXED: function is now called properly
