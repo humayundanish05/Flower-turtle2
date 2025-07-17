@@ -6,33 +6,55 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1 class="title">🎵 Beat Visualizer</h1>
 
-    <canvas id="webCanvas" width="800" height="400"></canvas>
+  <!-- Canvas for visualizer -->
+  <canvas id="webCanvas" width="800" height="400"></canvas>
 
-    <div class="controls">
-      <div class="row">
-        <button id="toggleBtn">Pause</button>
+  <!-- Controls Panel -->
+  <div class="controls">
+    
+    <!-- Play / Pause Button -->
+    <button id="toggleBtn">Pause</button>
 
-        <label for="modeSelect">Mode:</label>
-        <select id="modeSelect">
-          <option value="wave">Wave</option>
-          <option value="circle">Circle</option>
-          <option value="heartbeat">Heartbeat</option>
-        </select>
+    <!-- Pulse Speed Slider -->
+    <label for="speedSlider">Pulse Speed:</label>
+    <input 
+      type="range" 
+      id="speedSlider" 
+      min="0.5" 
+      max="5" 
+      step="0.1" 
+      value="1"
+    >
 
-        <label for="speedSlider">Speed:</label>
-        <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="1">
-      </div>
+    <!-- Visualizer Mode Select -->
+    <label for="modeSelect">Visualizer Mode:</label>
+    <select id="modeSelect">
+      <option value="wave">Wave</option>
+      <option value="circle">Circle</option>
+      <option value="heartbeat">Heartbeat</option>
+    </select>
 
-      <div class="row">
-        <label for="audioFile" class="file-label">🎧 Upload Music</label>
-        <input type="file" id="audioFile" accept="audio/*" hidden>
-      </div>
-    </div>
+    <!-- Playlist Selector -->
+    <label for="playlist">Select a Track:</label>
+    <select id="playlist">
+      <option value="">-- Choose from playlist --</option>
+      <option value="music/track1.mp3">Track 1 - Chill Vibe</option>
+      <option value="music/track2.mp3">Track 2 - Energy Boost</option>
+      <option value="music/track3.mp3">Track 3 - Slow Beats</option>
+    </select>
+
+    <!-- File Upload -->
+    <label for="audioFile">Or Upload Your Own:</label>
+    <input 
+      type="file" 
+      id="audioFile" 
+      accept="audio/*"
+    >
+    
   </div>
 
+  <!-- JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>
