@@ -1,11 +1,11 @@
-// Ensure canvas is set up
+// Setup canvas
 const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 ctx.translate(centerX, centerY);
 
-// Base variables
+// Variables
 let isPaused = false;
 let angle = 0;
 let pulse = 1;
@@ -14,7 +14,7 @@ let mode = "wave";
 let audioContext, analyser, dataArray, audioSource = null, currentAudio = null;
 let heartbeatData = [], stars = [], dust = [], nebula = [];
 
-// Init Galaxy BG
+// Galaxy Init
 function initGalaxy() {
   stars = Array.from({ length: 100 }, () => ({
     x: Math.random() * canvas.width - centerX,
@@ -46,7 +46,7 @@ document.getElementById("toggleBtn").addEventListener("click", () => {
   if (currentAudio) isPaused ? currentAudio.pause() : currentAudio.play();
 });
 
-// Audio setup
+// Playlist
 document.getElementById("playlist").addEventListener("change", function () {
   const file = this.value;
   if (!file) return;
@@ -66,6 +66,7 @@ document.getElementById("playlist").addEventListener("change", function () {
   currentAudio = audio;
 });
 
+// File upload
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (!file) return;
@@ -88,11 +89,13 @@ document.getElementById("audioFile").addEventListener("change", function () {
   reader.readAsArrayBuffer(file);
 });
 
+// HSV to RGB
 function hsvToRgb(h, s, v) {
   let f = (n, k = (n + h * 6) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
 
+// Pulse from audio
 function getAudioPulse() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
@@ -101,7 +104,7 @@ function getAudioPulse() {
   return 1;
 }
 
-// Visualizers
+// Wave mode
 function drawWave() {
   ctx.beginPath();
   ctx.moveTo(-centerX, 0);
@@ -118,6 +121,7 @@ function drawWave() {
   ctx.stroke();
 }
 
+// Circle Web
 function drawCircleWeb() {
   const rings = 6, lines = 5, maxRadius = 200;
   for (let i = 1; i <= rings; i++) {
@@ -138,6 +142,7 @@ function drawCircleWeb() {
   }
 }
 
+// Heartbeat (lighter version)
 function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
@@ -171,6 +176,7 @@ function drawHeartbeat() {
   ctx.restore();
 }
 
+// Galaxy BG
 function drawGalaxyBackground() {
   for (let s of stars) {
     ctx.beginPath();
@@ -201,10 +207,10 @@ function drawGalaxyBackground() {
 function drawSigma() {
   drawGalaxyBackground();
   drawWave();
-  // Add future fire/spark effects here
+  // Add more epic effects here later (fire, shock, etc.)
 }
 
-// Keyboard Shortcuts
+// Keyboard
 document.addEventListener("keydown", (e) => {
   switch (e.code) {
     case "Space":
@@ -217,7 +223,7 @@ document.addEventListener("keydown", (e) => {
     case "Digit2": mode = "circle"; break;
     case "Digit3": mode = "heartbeat"; break;
     case "Digit4": mode = "galaxy"; break;
-    case "KeyX": mode = "sigma"; break; // Secret Sigma mode
+    case "KeyX": mode = "sigma"; break;
     case "ArrowUp": speed = Math.min(speed + 0.1, 5); break;
     case "ArrowDown": speed = Math.max(speed - 0.1, 0.5); break;
   }
@@ -225,7 +231,7 @@ document.addEventListener("keydown", (e) => {
   document.getElementById("speedSlider").value = speed;
 });
 
-// Render loop
+// Render
 function drawVisualizer() {
   if (!isPaused) {
     ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
