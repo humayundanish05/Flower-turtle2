@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+initGalaxyParticles();
+
 let audioContext, analyser, source, dataArray, bufferLength, currentAudio;
 let isPaused = false;
 let mode = "wave";
@@ -201,26 +203,50 @@ function drawHeartbeat(avg) {
   ctx.stroke();
 }
 
+let galaxyParticles = [];
+
+function initGalaxyParticles() {
+  galaxyParticles = [];
+  for (let i = 0; i < 200; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 200;
+    const speed = 0.001 + Math.random() * 0.002;
+    const size = Math.random() * 2 + 1;
+    galaxyParticles.push({ angle, radius, speed, size });
+  }
+}
+
 function drawGalaxy(avg) {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
 
-  for (let i = 0; i < 50; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = Math.random() * (avg * 2);
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
-    ctx.beginPath();
-    ctx.arc(x, y, Math.random() * 3 + 1, 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${(i * 10 + avg) % 360}, 100%, 70%)`;
-    ctx.fill();
-  }
-
+  // Background pulsing nebula ring
   ctx.beginPath();
-  ctx.arc(centerX, centerY, avg * 0.5, 0, Math.PI * 2);
-  ctx.strokeStyle = `hsl(${avg * 2}, 100%, 60%)`;
-  ctx.lineWidth = 3;
+  ctx.arc(centerX, centerY, avg * 1.2 + 60, 0, Math.PI * 2);
+  ctx.strokeStyle = `hsla(${avg * 2}, 100%, 50%, 0.2)`;
+  ctx.lineWidth = 20 + (avg / 8);
   ctx.stroke();
+
+  // Stars orbiting (space dust)
+  galaxyParticles.forEach(p => {
+    p.angle += p.speed * (speed || 1); // rotate
+
+    const x = centerX + p.radius * Math.cos(p.angle);
+    const y = centerY + p.radius * Math.sin(p.angle);
+
+    ctx.beginPath();
+    ctx.arc(x, y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${(p.angle * 180 / Math.PI + avg * 3) % 360}, 100%, 70%, 0.8)`;
+    ctx.fill();
+  });
+
+  // Flashing core star
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 6 + avg * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = `white`;
+  ctx.shadowColor = `hsl(${avg * 3}, 100%, 70%)`;
+  ctx.shadowBlur = 25;
+  ctx.fill();
 }
 
 function drawSigma(avg) {
