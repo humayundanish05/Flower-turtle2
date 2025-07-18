@@ -181,16 +181,18 @@ function drawHeartbeat() {
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
     const beatValue = (avg - 100) * 2.5;
     heartbeatData.push(beatValue);
-    if (heartbeatData.length > canvas.width / 1.5) heartbeatData.shift(); // Adjust for spacing
   } else {
     heartbeatData.push(Math.sin(angle * 5) * 50);
-    if (heartbeatData.length > canvas.width / 1.5) heartbeatData.shift();
   }
+
+  const spacing = 2.5; // Increased X spacing between beats
+  const maxPoints = canvas.width / spacing;
+  if (heartbeatData.length > maxPoints) heartbeatData.shift();
 
   ctx.save();
   ctx.translate(-centerX, 0);
 
-  ctx.lineWidth = 2.5; // Make the lines bolder
+  ctx.lineWidth = 4.5; // 🔥 Bolder heartbeat line
 
   for (let i = 0; i < heartbeatData.length - 1; i++) {
     const y1 = -heartbeatData[i];
@@ -207,12 +209,11 @@ function drawHeartbeat() {
       color = "lime";
     }
 
+    const x1 = i * spacing;
+    const x2 = (i + 1) * spacing;
+
     ctx.beginPath();
     ctx.strokeStyle = color;
-
-    const x1 = i * 1.5;      // Stretch X for spacing
-    const x2 = (i + 1) * 1.5;
-
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
