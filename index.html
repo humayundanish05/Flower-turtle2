@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,5 +65,14 @@
 
   <!-- JavaScript -->
   <script src="script.js" defer></script>
+
+  <!-- ✅ Mobile autoplay fix script -->
+  <script>
+    document.body.addEventListener("click", () => {
+      if (window.audioContext && audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+    }, { once: true });
+  </script>
 </body>
 </html>
