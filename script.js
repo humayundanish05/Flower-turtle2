@@ -97,14 +97,28 @@ function animate() {
 // ======== MODES ==========
 
 function drawWave() {
+  const centerY = canvas.height / 2;
+  const sliceWidth = canvas.width / (bufferLength - 1);
+
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height / 2);
-  for (let i = 0; i < bufferLength; i++) {
-    const x = (i / bufferLength) * canvas.width;
-    const y = canvas.height / 2 + (dataArray[i] - 128) * speed * 0.6;
-    ctx.lineTo(x, y);
+  ctx.moveTo(0, centerY);
+
+  for (let i = 1; i < bufferLength - 2; i++) {
+    const x = i * sliceWidth;
+    const prev = centerY + (dataArray[i - 1] - 128) * speed * 0.4;
+    const curr = centerY + (dataArray[i] - 128) * speed * 0.4;
+    const next = centerY + (dataArray[i + 1] - 128) * speed * 0.4;
+    const ctrlY = (prev + next) / 2;
+
+    ctx.quadraticCurveTo(x, curr, x + sliceWidth, ctrlY);
   }
-  ctx.strokeStyle = "#00ffff";
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  gradient.addColorStop(0, "#00ffff");
+  gradient.addColorStop(0.5, "#00aaff");
+  gradient.addColorStop(1, "#00ffff");
+
+  ctx.strokeStyle = gradient;
   ctx.lineWidth = 2;
   ctx.stroke();
 }
