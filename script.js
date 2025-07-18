@@ -46,6 +46,12 @@ document.getElementById("toggleBtn").addEventListener("click", () => {
   if (currentAudio) isPaused ? currentAudio.pause() : currentAudio.play();
 });
 
+// Sigma Mode Button
+document.getElementById("sigmaBtn").addEventListener("click", () => {
+  mode = "sigma";
+  document.getElementById("modeSelect").value = "wave"; // Keep dropdown on wave to avoid mismatch
+});
+
 // Playlist
 document.getElementById("playlist").addEventListener("change", function () {
   const file = this.value;
@@ -142,7 +148,7 @@ function drawCircleWeb() {
   }
 }
 
-// Heartbeat (lighter version)
+// Heartbeat (lighter)
 function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
@@ -207,29 +213,7 @@ function drawGalaxyBackground() {
 function drawSigma() {
   drawGalaxyBackground();
   drawWave();
-  // Add more epic effects here later (fire, shock, etc.)
 }
-
-// Keyboard
-document.addEventListener("keydown", (e) => {
-  switch (e.code) {
-    case "Space":
-      e.preventDefault();
-      isPaused = !isPaused;
-      document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-      if (currentAudio) isPaused ? currentAudio.pause() : currentAudio.play();
-      break;
-    case "Digit1": mode = "wave"; break;
-    case "Digit2": mode = "circle"; break;
-    case "Digit3": mode = "heartbeat"; break;
-    case "Digit4": mode = "galaxy"; break;
-    case "KeyX": mode = "sigma"; break;
-    case "ArrowUp": speed = Math.min(speed + 0.1, 5); break;
-    case "ArrowDown": speed = Math.max(speed - 0.1, 0.5); break;
-  }
-  document.getElementById("modeSelect").value = mode;
-  document.getElementById("speedSlider").value = speed;
-});
 
 // Render
 function drawVisualizer() {
