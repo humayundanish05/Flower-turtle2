@@ -192,14 +192,28 @@ function drawHeartbeat() {
   ctx.beginPath();
   ctx.moveTo(0, 0);
 
-  for (let i = 0; i < heartbeatData.length; i++) {
-    ctx.lineTo(i, -heartbeatData[i]);
+  for (let i = 0; i < heartbeatData.length - 1; i++) {
+    const y1 = -heartbeatData[i];
+    const y2 = -heartbeatData[i + 1];
+
+    // Gradient color based on vertical height
+    const intensity = Math.abs(y2);
+    let color;
+    if (intensity > 70) {
+      color = "red";      // Top high-intensity
+    } else if (intensity > 40) {
+      color = "yellow";   // Mid range
+    } else {
+      color = "lime";     // Low amplitude
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.moveTo(i, y1);
+    ctx.lineTo(i + 1, y2);
+    ctx.stroke();
   }
 
-  const [r, g, b] = hsvToRgb((angle * 3) % 1, 1, 1);
-  ctx.strokeStyle = `rgb(${r},${g},${b})`;
-  ctx.lineWidth = 2;
-  ctx.stroke();
   ctx.restore();
 }
 
