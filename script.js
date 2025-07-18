@@ -14,7 +14,7 @@ let currentAudio = null;
 let mode = "wave";
 let heartbeatData = [];
 
-// Galaxy background particles
+// Galaxy mode variables
 let stars = [], dust = [], nebula = [];
 
 function initGalaxy() {
@@ -99,7 +99,6 @@ document.getElementById("audioFile").addEventListener("change", function () {
   const reader = new FileReader();
   reader.onload = function (e) {
     if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
     audioContext.decodeAudioData(e.target.result, function (buffer) {
       if (audioSource) audioSource.stop();
       audioSource = audioContext.createBufferSource();
@@ -133,7 +132,6 @@ function getAudioPulse() {
 function drawWave() {
   ctx.beginPath();
   ctx.moveTo(-centerX, 0);
-
   if (analyser && dataArray) {
     analyser.getByteTimeDomainData(dataArray);
     for (let i = 0; i < dataArray.length; i++) {
@@ -142,7 +140,6 @@ function drawWave() {
       ctx.lineTo(x, y);
     }
   }
-
   const [r, g, b] = hsvToRgb((angle * 10) % 1, 1, 1);
   ctx.strokeStyle = `rgb(${r},${g},${b})`;
   ctx.stroke();
@@ -152,7 +149,6 @@ function drawCircleWeb() {
   const rings = 6;
   const lines = 5;
   const maxRadius = 200;
-
   for (let i = 1; i <= rings; i++) {
     ctx.beginPath();
     ctx.arc(0, 0, (i / rings) * maxRadius * pulse, 0, Math.PI * 2);
@@ -160,24 +156,18 @@ function drawCircleWeb() {
     ctx.strokeStyle = `rgb(${r},${g},${b})`;
     ctx.stroke();
   }
-
   for (let i = 0; i < lines; i++) {
     const theta = (i / lines) * 2 * Math.PI;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(
-      Math.cos(theta) * maxRadius * pulse,
-      Math.sin(theta) * maxRadius * pulse
-    );
+    ctx.lineTo(Math.cos(theta) * maxRadius * pulse, Math.sin(theta) * maxRadius * pulse);
     const [r, g, b] = hsvToRgb((angle + i / lines) % 1, 1, 1);
     ctx.strokeStyle = `rgb(${r},${g},${b})`;
     ctx.stroke();
   }
 }
 
-// 🌌 Galaxy Background Drawing
 function drawGalaxyBackground() {
-  // Glowing stars
   for (let s of stars) {
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -185,13 +175,27 @@ function drawGalaxyBackground() {
     ctx.fill();
   }
 
-  // Rotating space dust
   for (let d of dust) {
     d.angle += d.speed;
     let dx = Math.cos(d.angle) * d.r * 10;
     let dy = Math.sin(d.angle) * d.r * 10;
     ctx.beginPath();
-    ctx.arc(d.function drawHeartbeat() {
+    ctx.arc(d.x + dx, d.y + dy, 1, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(200,200,255,0.2)";
+    ctx.fill();
+  }
+
+  for (let n of nebula) {
+    ctx.beginPath();
+    let radius = n.radius * pulse * 0.5;
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+}
+
+function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
@@ -201,7 +205,7 @@ function drawGalaxyBackground() {
     heartbeatData.push(Math.sin(angle * 5) * 50);
   }
 
-  const spacing = 3; // More spacing for impact
+  const spacing = 3;
   const maxPoints = canvas.width / spacing;
   if (heartbeatData.length > maxPoints) heartbeatData.shift();
 
@@ -211,20 +215,19 @@ function drawGalaxyBackground() {
   for (let i = 0; i < heartbeatData.length - 1; i++) {
     const y1 = -heartbeatData[i];
     const y2 = -heartbeatData[i + 1];
-
     const intensity = Math.abs(y2);
     let color, glow, thickness;
 
     if (intensity > 75) {
-      color = "#ff3300"; // Fire red
-      glow = "#ff9900";  // Orange glow
+      color = "#ff3300";
+      glow = "#ff9900";
       thickness = 6;
     } else if (intensity > 50) {
-      color = "#ffff00"; // Yellow
-      glow = "#ffaa00";  // Warm yellow-orange
+      color = "#ffff00";
+      glow = "#ffaa00";
       thickness = 4;
     } else {
-      color = "#00ff00"; // Green
+      color = "#00ff00";
       glow = "#00ff88";
       thickness = 2;
     }
@@ -241,7 +244,6 @@ function drawGalaxyBackground() {
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // Optional: draw sparks on high beat
     if (intensity > 80 && i % 5 === 0) {
       ctx.beginPath();
       ctx.arc(x2, y2, 3 + Math.random() * 2, 0, 2 * Math.PI);
@@ -252,20 +254,6 @@ function drawGalaxyBackground() {
   }
 
   ctx.restore();
-    }x + dx, d.y + dy, 1, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(200,200,255,0.2)";
-    ctx.fill();
-  }
-
-  // Pulsing nebula rings
-  for (let n of nebula) {
-    ctx.beginPath();
-    let radius = n.radius * pulse * 0.5;
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = n.color;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-  }
 }
 
 function drawVisualizer() {
