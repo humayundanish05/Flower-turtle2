@@ -172,19 +172,32 @@ function drawCircleWeb() {
 
 function drawHeartbeat(avg) {
   const centerY = canvas.height / 2;
+  const pulseWidth = canvas.width / bufferLength;
+  const threshold = 180; // Controls peak triggering
+  let pulseActive = false;
+
   ctx.beginPath();
   ctx.moveTo(0, centerY);
-  let x = 0;
 
   for (let i = 0; i < bufferLength; i++) {
-    const height = (dataArray[i] / 255) * 80;
-    x += canvas.width / bufferLength;
-    const y = i % 10 === 0 ? centerY - height * speed : centerY;
+    const value = dataArray[i];
+    const x = i * pulseWidth;
+    let y = centerY;
+
+    if (value > threshold && !pulseActive) {
+      y = centerY - (value / 255) * 80 * speed;
+      pulseActive = true; // One spike only
+    } else {
+      pulseActive = false;
+    }
+
     ctx.lineTo(x, y);
   }
 
-  ctx.strokeStyle = `hsl(${avg + 200}, 100%, 60%)`;
+  ctx.strokeStyle = `hsl(${avg + 150}, 100%, 60%)`; // soft shifting green-blue
   ctx.lineWidth = 2;
+  ctx.shadowColor = ctx.strokeStyle;
+  ctx.shadowBlur = 6;
   ctx.stroke();
 }
 
