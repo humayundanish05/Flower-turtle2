@@ -127,24 +127,47 @@ function drawCircleWeb() {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
   const maxRadius = Math.min(canvas.width, canvas.height) / 3;
+  const numRings = 5;
+  const numLines = 8;
 
-  for (let i = 1; i <= 4; i++) {
+  // Background glow (soft radial pulse)
+  const radialGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+  radialGradient.addColorStop(0, "rgba(0,255,255,0.05)");
+  radialGradient.addColorStop(1, "rgba(0,255,255,0)");
+  ctx.fillStyle = radialGradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw concentric rings
+  for (let i = 1; i <= numRings; i++) {
+    const radius = (maxRadius / numRings) * i;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, (maxRadius / 4) * i, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(0,255,255,${0.15 * i})`;
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(0,255,255,${0.1 + 0.15 * (i / numRings)})`;
+    ctx.lineWidth = 1 + (i === numRings ? 1 : 0); // outer ring slightly thicker
     ctx.stroke();
   }
 
-  for (let i = 0; i < 5; i++) {
-    const angle = (i / 5) * Math.PI * 2;
+  // Draw radial lines
+  for (let i = 0; i < numLines; i++) {
+    const angle = (i / numLines) * Math.PI * 2;
     const x = centerX + maxRadius * Math.cos(angle);
     const y = centerY + maxRadius * Math.sin(angle);
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.lineTo(x, y);
-    ctx.strokeStyle = "rgba(0,255,255,0.3)";
+    ctx.strokeStyle = "rgba(0,255,255,0.2)";
+    ctx.lineWidth = 1;
     ctx.stroke();
   }
+
+  // Pulsing central core
+  const pulse = (Math.sin(Date.now() * 0.005) + 1) / 2;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 6 + pulse * 6, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(0,255,255,${0.3 + pulse * 0.4})`;
+  ctx.fill();
 }
 
 function drawHeartbeat(avg) {
