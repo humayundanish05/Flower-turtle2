@@ -22,10 +22,22 @@ document.getElementById("speedSlider").addEventListener("input", (e) => {
   speed = parseFloat(e.target.value);
 });
 document.getElementById("playlist").addEventListener("change", (e) => {
-  if (e.target.value) loadAudio(e.target.value);
+  const selected = e.target.value;
+  if (selected) {
+    const fullUrl = `${window.location.origin}/${selected}`;
+    loadAudio(fullUrl);
+  }
 });
 document.getElementById("audioFile").addEventListener("change", (e) => {
-  if (e.target.files[0]) loadAudio(URL.createObjectURL(e.target.files[0]));
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const blobUrl = URL.createObjectURL(file);
+  loadAudio(blobUrl);
+
+  currentAudio.addEventListener('canplay', () => {
+    currentAudio.play().catch(err => console.error("Autoplay error:", err));
+  });
 });
 sigmaBtn.addEventListener("click", () => {
   sigmaMode = !sigmaMode;
@@ -69,7 +81,6 @@ function loadAudio(src) {
   bufferLength = analyser.frequencyBinCount;
   dataArray = new Uint8Array(bufferLength);
 
-  // Resume context on user gesture (important for mobile)
   document.body.addEventListener("click", () => {
     if (audioContext.state === "suspended") {
       audioContext.resume();
