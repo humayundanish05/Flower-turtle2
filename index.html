@@ -8,9 +8,6 @@
 </head>
 <body>
 
-  <!-- Hidden input to catch keyboard on mobile -->
-  <input type="text" id="keyCatcher" style="opacity:0; position:fixed; top:-100px;" />
-
   <!-- Canvas for Visualizer -->
   <canvas id="webCanvas" width="800" height="400"></canvas>
 
@@ -28,7 +25,7 @@
       <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="1">
     </div>
 
-    <!-- Mode -->
+    <!-- Mode Selection -->
     <div class="control-group">
       <label for="modeSelect">Visualizer Mode:</label>
       <select id="modeSelect">
@@ -36,11 +33,12 @@
         <option value="circle">Circle</option>
         <option value="heartbeat">Heartbeat</option>
         <option value="galaxy">Galaxy 🌌</option>
-        <!-- Secret mode not listed for surprise effect -->
       </select>
-      <small style="display:block; font-size: 0.8em; color: #888;">
-        (Press <strong>X</strong> for Sigma Mode 🔥)
-      </small>
+    </div>
+
+    <!-- Sigma Mode Button -->
+    <div class="control-group">
+      <button id="sigmaBtn">🔥 Sigma Mode</button>
     </div>
 
     <!-- Predefined Playlist -->
@@ -59,7 +57,7 @@
       <label for="audioFile">Or Upload Your Own:</label>
       <input type="file" id="audioFile" accept="audio/*">
     </div>
-    
+
   </div>
 
   <!-- JavaScript -->
