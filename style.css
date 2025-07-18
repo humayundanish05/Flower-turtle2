@@ -21,7 +21,7 @@ body {
 
 /* Screen shake effect in Sigma mode */
 body.shake {
-  animation: screenShake 0.1s infinite;
+  animation: screenShake 0.12s infinite;
 }
 
 /* Canvas Styling */
@@ -107,13 +107,14 @@ canvas {
   box-shadow: 0 0 12px #ff0055;
 }
 
-/* Shake animation */
+/* Shake animation (stronger version) */
 @keyframes screenShake {
   0%   { transform: translate(0px, 0px); }
-  25%  { transform: translate(2px, -2px); }
-  50%  { transform: translate(-2px, 2px); }
-  75%  { transform: translate(2px, 2px); }
-  100% { transform: translate(-2px, -2px); }
+  20%  { transform: translate(8px, -6px); }
+  40%  { transform: translate(-6px, 8px); }
+  60%  { transform: translate(6px, 6px); }
+  80%  { transform: translate(-8px, -6px); }
+  100% { transform: translate(0px, 0px); }
 }
 
 /* Responsive Tuning */
