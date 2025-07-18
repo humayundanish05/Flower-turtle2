@@ -177,46 +177,51 @@ function drawCircleWeb() {
 
 function drawHeartbeat() {
   if (analyser && dataArray) {
+function drawHeartbeat() {
+  if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
     const beatValue = (avg - 100) * 2.5;
     heartbeatData.push(beatValue);
-    if (heartbeatData.length > canvas.width) heartbeatData.shift();
+    if (heartbeatData.length > canvas.width / 1.5) heartbeatData.shift(); // Adjust for spacing
   } else {
     heartbeatData.push(Math.sin(angle * 5) * 50);
-    if (heartbeatData.length > canvas.width) heartbeatData.shift();
+    if (heartbeatData.length > canvas.width / 1.5) heartbeatData.shift();
   }
 
   ctx.save();
   ctx.translate(-centerX, 0);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
+
+  ctx.lineWidth = 2.5; // Make the lines bolder
 
   for (let i = 0; i < heartbeatData.length - 1; i++) {
     const y1 = -heartbeatData[i];
     const y2 = -heartbeatData[i + 1];
 
-    // Gradient color based on vertical height
+    // Color based on intensity
     const intensity = Math.abs(y2);
     let color;
     if (intensity > 70) {
-      color = "red";      // Top high-intensity
+      color = "red";
     } else if (intensity > 40) {
-      color = "yellow";   // Mid range
+      color = "yellow";
     } else {
-      color = "lime";     // Low amplitude
+      color = "lime";
     }
 
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.moveTo(i, y1);
-    ctx.lineTo(i + 1, y2);
+
+    const x1 = i * 1.5;      // Stretch X for spacing
+    const x2 = (i + 1) * 1.5;
+
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
     ctx.stroke();
   }
 
   ctx.restore();
 }
-
 // 🌌 Galaxy Background Drawing
 function drawGalaxyBackground() {
   // Glowing stars
