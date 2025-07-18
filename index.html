@@ -63,6 +63,18 @@
 
   </div>
 
+  <button id="debugPlay" style="position:fixed;bottom:10px;left:10px;z-index:1000;">
+  Debug: Play Current Audio
+</button>
+<script>
+  document.getElementById('debugPlay').addEventListener('click', () => {
+    if (currentAudio) {
+      audioContext.resume().then(() => currentAudio.play())
+       .then(() => alert('🎵 Debug button played sound!'))
+       .catch(err => alert('❌ Debug play failed: ' + err.message));
+    } else alert('⚠️ No audio loaded yet.');
+  });
+</script>
   <!-- JavaScript -->
   <script src="script.js" defer></script>
 </body>
