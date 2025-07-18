@@ -205,19 +205,19 @@ function drawHeartbeat() {
     heartbeatData.push(Math.sin(angle * 5) * 50);
   }
 
-  const spacing = 2.5;
+  const spacing = 2.5; // Moderate distance between beat peaks
   const maxPoints = canvas.width / spacing;
   if (heartbeatData.length > maxPoints) heartbeatData.shift();
 
   ctx.save();
   ctx.translate(-centerX, 0);
-  ctx.lineWidth = 2.8;
+  ctx.lineWidth = 2.8; // Clean, bold line
 
   for (let i = 0; i < heartbeatData.length - 1; i++) {
     const y1 = -heartbeatData[i];
     const y2 = -heartbeatData[i + 1];
-    const intensity = Math.abs(y2);
 
+    const intensity = Math.abs(y2);
     let color;
     if (intensity > 70) {
       color = "red";
@@ -230,24 +230,15 @@ function drawHeartbeat() {
     const x1 = i * spacing;
     const x2 = (i + 1) * spacing;
 
-    // Draw main line
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-
-    // 🔥 Light burst effect on strong beats
-    if (intensity > 75 && i % 4 === 0) {
-      ctx.beginPath();
-      const burstRadius = 2 + Math.random() * 1.5;
-      ctx.arc(x2, y2, burstRadius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,100,0,0.3)";
-      ctx.shadowColor = "rgba(255,150,0,0.6)";
-      ctx.shadowBlur = 15;
-      ctx.fill();
-    }
   }
+
+  ctx.restore();
+}
 
   ctx.restore();
 }
