@@ -14,6 +14,34 @@ let currentAudio = null;
 let mode = "wave";
 let heartbeatData = [];
 
+// Galaxy background particles
+let stars = [], dust = [], nebula = [];
+
+function initGalaxy() {
+  stars = Array.from({ length: 100 }, () => ({
+    x: Math.random() * canvas.width - centerX,
+    y: Math.random() * canvas.height - centerY,
+    r: Math.random() * 1.5 + 0.5,
+    brightness: Math.random(),
+  }));
+
+  dust = Array.from({ length: 50 }, () => ({
+    x: Math.random() * canvas.width - centerX,
+    y: Math.random() * canvas.height - centerY,
+    r: Math.random() * 2 + 1,
+    angle: Math.random() * Math.PI * 2,
+    speed: 0.001 + Math.random() * 0.003,
+  }));
+
+  nebula = Array.from({ length: 3 }, () => ({
+    radius: 100 + Math.random() * 100,
+    angleOffset: Math.random() * Math.PI * 2,
+    color: `hsla(${Math.random() * 360}, 100%, 60%, 0.3)`
+  }));
+}
+
+initGalaxy();
+
 document.getElementById("modeSelect").addEventListener("change", (e) => {
   mode = e.target.value;
 });
@@ -45,8 +73,7 @@ document.getElementById("playlist").addEventListener("change", function () {
   const audio = new Audio(file);
   audio.crossOrigin = "anonymous";
   audio.loop = true;
-  audio.controls = false;
-  document.body.appendChild(audio); // required to keep audio accessible
+  document.body.appendChild(audio);
 
   const source = audioContext.createMediaElementSource(audio);
   analyser = audioContext.createAnalyser();
@@ -114,10 +141,6 @@ function drawWave() {
       let y = ((dataArray[i] - 128) / 128) * (pulse * 30);
       ctx.lineTo(x, y);
     }
-  } else {
-    for (let x = -centerX; x < centerX; x++) {
-      ctx.lineTo(x, Math.sin((x + angle * 100) / 50) * 10);
-    }
   }
 
   const [r, g, b] = hsvToRgb((angle * 10) % 1, 1, 1);
@@ -180,10 +203,44 @@ function drawHeartbeat() {
   ctx.restore();
 }
 
+// 🌌 Galaxy Background Drawing
+function drawGalaxyBackground() {
+  // Glowing stars
+  for (let s of stars) {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${s.brightness})`;
+    ctx.fill();
+  }
+
+  // Rotating space dust
+  for (let d of dust) {
+    d.angle += d.speed;
+    let dx = Math.cos(d.angle) * d.r * 10;
+    let dy = Math.sin(d.angle) * d.r * 10;
+    ctx.beginPath();
+    ctx.arc(d.x + dx, d.y + dy, 1, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(200,200,255,0.2)";
+    ctx.fill();
+  }
+
+  // Pulsing nebula rings
+  for (let n of nebula) {
+    ctx.beginPath();
+    let radius = n.radius * pulse * 0.5;
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+}
+
 function drawVisualizer() {
   if (!isPaused) {
     ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
     pulse = getAudioPulse();
+
+    if (mode === "galaxy") drawGalaxyBackground();
 
     switch (mode) {
       case "wave":
