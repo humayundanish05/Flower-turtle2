@@ -13,6 +13,8 @@ let speed = 1;
 let mode = "wave";
 let audioContext, analyser, dataArray, audioSource = null, currentAudio = null;
 let heartbeatData = [], stars = [], dust = [], nebula = [];
+let shakeAmount = 0;
+let root = document.body;
 
 // Galaxy Init
 function initGalaxy() {
@@ -46,10 +48,10 @@ document.getElementById("toggleBtn").addEventListener("click", () => {
   if (currentAudio) isPaused ? currentAudio.pause() : currentAudio.play();
 });
 
-// Sigma Mode Button
+// Sigma Button
 document.getElementById("sigmaBtn").addEventListener("click", () => {
   mode = "sigma";
-  document.getElementById("modeSelect").value = "wave"; // Keep dropdown on wave to avoid mismatch
+  document.getElementById("modeSelect").value = "";
 });
 
 // Playlist
@@ -101,7 +103,7 @@ function hsvToRgb(h, s, v) {
   return [f(5) * 255, f(3) * 255, f(1) * 255];
 }
 
-// Pulse from audio
+// Pulse
 function getAudioPulse() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
@@ -110,7 +112,7 @@ function getAudioPulse() {
   return 1;
 }
 
-// Wave mode
+// Draw Modes
 function drawWave() {
   ctx.beginPath();
   ctx.moveTo(-centerX, 0);
@@ -127,7 +129,6 @@ function drawWave() {
   ctx.stroke();
 }
 
-// Circle Web
 function drawCircleWeb() {
   const rings = 6, lines = 5, maxRadius = 200;
   for (let i = 1; i <= rings; i++) {
@@ -148,7 +149,6 @@ function drawCircleWeb() {
   }
 }
 
-// Heartbeat (lighter)
 function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
@@ -209,13 +209,26 @@ function drawGalaxyBackground() {
   }
 }
 
+// Sigma Mode
 function drawSigma() {
   drawGalaxyBackground();
 
-  // Stronger pulse for Sigma
   const pulseStrength = getAudioPulse() * 1.5;
 
-  // Fiery glowing waveform
+  // Beat shake
+  if (pulseStrength > 1.8) {
+    shakeAmount = 10;
+  }
+  if (shakeAmount > 0) {
+    const x = (Math.random() - 0.5) * shakeAmount;
+    const y = (Math.random() - 0.5) * shakeAmount;
+    root.style.transform = `translate(${x}px, ${y}px)`;
+    shakeAmount *= 0.9;
+  } else {
+    root.style.transform = "translate(0, 0)";
+  }
+
+  // Waveform
   if (analyser && dataArray) {
     analyser.getByteTimeDomainData(dataArray);
     ctx.beginPath();
@@ -230,10 +243,10 @@ function drawSigma() {
     ctx.strokeStyle = "red";
     ctx.lineWidth = 2.5;
     ctx.stroke();
-    ctx.shadowBlur = 0; // reset shadow
+    ctx.shadowBlur = 0;
   }
 
-  // Fire Sparks
+  // Sparks
   for (let i = 0; i < 10; i++) {
     const x = Math.random() * canvas.width - centerX;
     const y = Math.random() * canvas.height - centerY;
@@ -245,7 +258,20 @@ function drawSigma() {
   }
 }
 
-document.getElementById("sigmaBtn").addEventListener("click", () => {
-  mode = "sigma";
-  document.getElementById("modeSelect").value = "";
-});
+// Animation Loop
+function animate() {
+  requestAnimationFrame(animate);
+  if (isPaused) return;
+  ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
+  pulse = getAudioPulse();
+  angle += 0.01 * speed;
+
+  switch (mode) {
+    case "wave": drawWave(); break;
+    case "circle": drawCircleWeb(); break;
+    case "heartbeat": drawHeartbeat(); break;
+    case "galaxy": drawGalaxyBackground(); break;
+    case "sigma": drawSigma(); break;
+  }
+}
+animate();
