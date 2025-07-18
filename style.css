@@ -38,10 +38,11 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: rgba(10, 10, 30, 0.85);
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
 }
 
 /* Each control group */
@@ -65,18 +66,18 @@ canvas {
 .controls select {
   padding: 10px 12px;
   font-size: 16px;
-  background-color: #1e1e2e;
+  background-color: rgba(30, 30, 60, 0.3);
   color: #fff;
-  border: 1px solid #444;
+  border: 1px solid rgba(0, 255, 255, 0.3);
   border-radius: 8px;
   transition: 0.3s ease;
   cursor: pointer;
   width: 100%;
+  backdrop-filter: blur(4px);
 }
 
-/* Range specific width */
+/* Range specific styling */
 .controls input[type="range"] {
-  width: 100%;
   accent-color: #0ff;
 }
 
@@ -84,7 +85,7 @@ canvas {
 .controls button:hover,
 .controls input[type="file"]:hover,
 .controls select:hover {
-  background-color: #333;
+  background-color: rgba(60, 60, 90, 0.4);
   border-color: #0ff;
   box-shadow: 0 0 10px #0ff;
 }
