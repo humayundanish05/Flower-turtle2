@@ -267,3 +267,40 @@ function drawVisualizer() {
 
 ctx.lineWidth = 1;
 drawVisualizer();
+
+document.addEventListener("keydown", (e) => {
+  switch (e.code) {
+    case "Space":
+      e.preventDefault();
+      isPaused = !isPaused;
+      document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
+      if (currentAudio) {
+        isPaused ? currentAudio.pause() : currentAudio.play();
+      }
+      break;
+    case "Digit1":
+      mode = "wave";
+      document.getElementById("modeSelect").value = "wave";
+      break;
+    case "Digit2":
+      mode = "circle";
+      document.getElementById("modeSelect").value = "circle";
+      break;
+    case "Digit3":
+      mode = "heartbeat";
+      document.getElementById("modeSelect").value = "heartbeat";
+      break;
+    case "Digit4":
+      mode = "galaxy";
+      document.getElementById("modeSelect").value = "galaxy";
+      break;
+    case "ArrowUp":
+      speed = Math.min(speed + 0.1, 5);
+      document.getElementById("speedSlider").value = speed;
+      break;
+    case "ArrowDown":
+      speed = Math.max(speed - 0.1, 0.5);
+      document.getElementById("speedSlider").value = speed;
+      break;
+  }
+});
