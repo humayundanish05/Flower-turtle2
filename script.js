@@ -56,6 +56,11 @@ function loadAudio(src) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
+  // Resume context right before playing — good fallback
+  if (audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+
   source = audioContext.createMediaElementSource(currentAudio);
   analyser = audioContext.createAnalyser();
   source.connect(analyser);
@@ -66,9 +71,11 @@ function loadAudio(src) {
   dataArray = new Uint8Array(bufferLength);
 
   currentAudio.play().then(() => {
+    console.log("Audio started playing");
     animate();
   }).catch((err) => {
     console.error("Autoplay failed:", err);
+    alert("Audio play failed: " + err.message);
   });
 }
 
