@@ -8,8 +8,10 @@ let isPaused = false;
 let angle = 0;
 let pulse = 1;
 let speed = 1;
+let audioContext, analyser, dataArray;
+let audioSource = null;
+let currentAudio = null;
 let mode = "wave";
-let audioContext, audioSource, analyser, dataArray;
 let heartbeatData = [];
 
 document.getElementById("modeSelect").addEventListener("change", (e) => {
@@ -23,17 +25,56 @@ document.getElementById("speedSlider").addEventListener("input", (e) => {
 document.getElementById("toggleBtn").addEventListener("click", () => {
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
+  if (currentAudio) {
+    isPaused ? currentAudio.pause() : currentAudio.play();
+  }
+});
+
+document.getElementById("playlist").addEventListener("change", function () {
+  const file = this.value;
+  if (!file) return;
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.remove();
+    currentAudio = null;
+  }
+
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+  const audio = new Audio(file);
+  audio.crossOrigin = "anonymous";
+  audio.loop = true;
+  audio.controls = false;
+  document.body.appendChild(audio); // required to keep audio accessible
+
+  const source = audioContext.createMediaElementSource(audio);
+  analyser = audioContext.createAnalyser();
+  source.connect(analyser);
+  analyser.connect(audioContext.destination);
+  analyser.fftSize = 256;
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  audio.play();
+  currentAudio = audio;
 });
 
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
   if (!file) return;
 
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.remove();
+    currentAudio = null;
+  }
+
   const reader = new FileReader();
   reader.onload = function (e) {
     if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
     audioContext.decodeAudioData(e.target.result, function (buffer) {
-      if (audioSource && audioSource.stop) audioSource.stop();
+      if (audioSource) audioSource.stop();
       audioSource = audioContext.createBufferSource();
       analyser = audioContext.createAnalyser();
       audioSource.buffer = buffer;
@@ -41,32 +82,10 @@ document.getElementById("audioFile").addEventListener("change", function () {
       analyser.connect(audioContext.destination);
       analyser.fftSize = 256;
       dataArray = new Uint8Array(analyser.frequencyBinCount);
-      audioSource.start();
+      audioSource.start(0);
     });
   };
   reader.readAsArrayBuffer(file);
-});
-
-document.getElementById("playlist").addEventListener("change", function () {
-  const selected = this.value;
-  if (!selected) return;
-
-  const audio = new Audio(selected);
-  audio.crossOrigin = "anonymous";
-
-  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-  const track = audioContext.createMediaElementSource(audio);
-  analyser = audioContext.createAnalyser();
-  analyser.fftSize = 256;
-  dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  track.connect(analyser);
-  analyser.connect(audioContext.destination);
-
-  if (audioSource && audioSource.stop) audioSource.stop();
-  audioSource = track;
-  audio.play();
 });
 
 function hsvToRgb(h, s, v) {
