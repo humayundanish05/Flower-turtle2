@@ -8,8 +8,8 @@ let isPaused = false;
 let angle = 0;
 let pulse = 1;
 let speed = 1;
-let audioContext, audioSource, analyser, dataArray;
 let mode = "wave";
+let audioContext, audioSource, analyser, dataArray;
 let heartbeatData = [];
 
 document.getElementById("modeSelect").addEventListener("change", (e) => {
@@ -27,24 +27,46 @@ document.getElementById("toggleBtn").addEventListener("click", () => {
 
 document.getElementById("audioFile").addEventListener("change", function () {
   const file = this.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      audioContext.decodeAudioData(e.target.result, function (buffer) {
-        if (audioSource) audioSource.stop();
-        audioSource = audioContext.createBufferSource();
-        analyser = audioContext.createAnalyser();
-        audioSource.buffer = buffer;
-        audioSource.connect(analyser);
-        analyser.connect(audioContext.destination);
-        analyser.fftSize = 256;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-        audioSource.start();
-      });
-    };
-    reader.readAsArrayBuffer(file);
-  }
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioContext.decodeAudioData(e.target.result, function (buffer) {
+      if (audioSource && audioSource.stop) audioSource.stop();
+      audioSource = audioContext.createBufferSource();
+      analyser = audioContext.createAnalyser();
+      audioSource.buffer = buffer;
+      audioSource.connect(analyser);
+      analyser.connect(audioContext.destination);
+      analyser.fftSize = 256;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      audioSource.start();
+    });
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+document.getElementById("playlist").addEventListener("change", function () {
+  const selected = this.value;
+  if (!selected) return;
+
+  const audio = new Audio(selected);
+  audio.crossOrigin = "anonymous";
+
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+  const track = audioContext.createMediaElementSource(audio);
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  track.connect(analyser);
+  analyser.connect(audioContext.destination);
+
+  if (audioSource && audioSource.stop) audioSource.stop();
+  audioSource = track;
+  audio.play();
 });
 
 function hsvToRgb(h, s, v) {
@@ -70,12 +92,12 @@ function drawWave() {
     analyser.getByteTimeDomainData(dataArray);
     for (let i = 0; i < dataArray.length; i++) {
       let x = (i / dataArray.length) * canvas.width - centerX;
-      let y = ((dataArray[i] - 128) / 128) * (pulse * 30); // Stronger reaction
+      let y = ((dataArray[i] - 128) / 128) * (pulse * 30);
       ctx.lineTo(x, y);
     }
   } else {
     for (let x = -centerX; x < centerX; x++) {
-      ctx.lineTo(x, Math.sin((x + angle * 100) / 50) * 10); // Subtle idle
+      ctx.lineTo(x, Math.sin((x + angle * 100) / 50) * 10);
     }
   }
 
@@ -115,7 +137,7 @@ function drawHeartbeat() {
   if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    const beatValue = (avg - 100) * 2.5; // Stronger pulse
+    const beatValue = (avg - 100) * 2.5;
     heartbeatData.push(beatValue);
     if (heartbeatData.length > canvas.width) heartbeatData.shift();
   } else {
