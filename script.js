@@ -240,8 +240,6 @@ function drawHeartbeat() {
   ctx.restore();
 }
 
-  ctx.restore();
-}
 function drawVisualizer() {
   if (!isPaused) {
     ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
