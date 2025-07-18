@@ -8,6 +8,9 @@
 </head>
 <body>
 
+  <!-- Hidden input to catch keyboard on mobile -->
+  <input type="text" id="keyCatcher" style="opacity:0; position:fixed; top:-100px;" />
+
   <!-- Canvas for Visualizer -->
   <canvas id="webCanvas" width="800" height="400"></canvas>
 
@@ -35,7 +38,9 @@
         <option value="galaxy">Galaxy 🌌</option>
         <!-- Secret mode not listed for surprise effect -->
       </select>
-      <small style="display:block; font-size: 0.8em; color: #888;">(Press <strong>X</strong> for Sigma Mode 🔥)</small>
+      <small style="display:block; font-size: 0.8em; color: #888;">
+        (Press <strong>X</strong> for Sigma Mode 🔥)
+      </small>
     </div>
 
     <!-- Predefined Playlist -->
