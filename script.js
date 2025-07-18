@@ -22,52 +22,27 @@ document.getElementById("speedSlider").addEventListener("input", (e) => {
   speed = parseFloat(e.target.value);
 });
 document.getElementById("playlist").addEventListener("change", (e) => {
-  if (e.target.value) {
-    loadAudio(e.target.value);
-    setTimeout(() => {
-      togglePlayPause();
-    }, 500);
-  }
+  if (e.target.value) loadAudio(e.target.value);
 });
 document.getElementById("audioFile").addEventListener("change", (e) => {
-  if (e.target.files[0]) {
-    loadAudio(URL.createObjectURL(e.target.files[0]));
-    setTimeout(() => {
-      togglePlayPause();
-    }, 500);
-  }
+  if (e.target.files[0]) loadAudio(URL.createObjectURL(e.target.files[0]));
 });
 sigmaBtn.addEventListener("click", () => {
   sigmaMode = !sigmaMode;
 });
 
 function togglePlayPause() {
-  if (!currentAudio) {
-    alert("⚠️ No audio loaded yet!");
-    return;
-  }
-
-  if (audioContext.state === "suspended") {
+  if (!currentAudio) return;
+  if (audioContext && audioContext.state === "suspended") {
     audioContext.resume();
   }
 
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-
-  if (isPaused) {
-    currentAudio.pause();
-  } else {
-    currentAudio.play().then(() => {
-      console.log("Manual play successful");
-    }).catch((err) => {
-      alert("❌ Manual play failed: " + err.message);
-    });
-  }
+  isPaused ? currentAudio.pause() : currentAudio.play();
 }
 
 function loadAudio(src) {
-  alert("🎵 Audio loading started...");
-
   if (currentAudio) {
     currentAudio.pause();
     currentAudio = null;
@@ -75,13 +50,14 @@ function loadAudio(src) {
 
   currentAudio = new Audio(src);
   currentAudio.crossOrigin = "anonymous";
+  currentAudio.loop = false;
 
   if (!audioContext || audioContext.state === "closed") {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
+  if (source) {
+    source.disconnect();
   }
 
   source = audioContext.createMediaElementSource(currentAudio);
@@ -93,18 +69,24 @@ function loadAudio(src) {
   bufferLength = analyser.frequencyBinCount;
   dataArray = new Uint8Array(bufferLength);
 
+  // Resume context on user gesture (important for mobile)
+  document.body.addEventListener("click", () => {
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+  }, { once: true });
+
   currentAudio.play().then(() => {
-    alert("✅ Audio is playing!");
+    isPaused = false;
     animate();
   }).catch((err) => {
-    alert("❌ Playback failed: " + err.message);
     console.error("Autoplay failed:", err);
+    alert("Tap anywhere on the screen to start playback!");
   });
 }
 
 function animate() {
   requestAnimationFrame(animate);
-
   if (!analyser || isPaused) return;
 
   analyser.getByteFrequencyData(dataArray);
@@ -118,18 +100,10 @@ function animate() {
   }
 
   switch (mode) {
-    case "wave":
-      drawWave();
-      break;
-    case "circle":
-      drawCircleWeb();
-      break;
-    case "heartbeat":
-      drawHeartbeat(avg);
-      break;
-    case "galaxy":
-      drawGalaxy(avg);
-      break;
+    case "wave": drawWave(); break;
+    case "circle": drawCircleWeb(); break;
+    case "heartbeat": drawHeartbeat(avg); break;
+    case "galaxy": drawGalaxy(avg); break;
   }
 }
 
@@ -222,5 +196,4 @@ function drawGalaxy(avg) {
   ctx.strokeStyle = `hsl(${avg * 2}, 100%, 60%)`;
   ctx.lineWidth = 3;
   ctx.stroke();
-      }
-
+}
