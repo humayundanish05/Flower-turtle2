@@ -1,277 +1,195 @@
-// Setup canvas
 const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
-ctx.translate(centerX, centerY);
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-// Variables
+const toggleBtn = document.getElementById("toggleBtn");
+const modeSelect = document.getElementById("modeSelect");
+const speedSlider = document.getElementById("speedSlider");
+const playlist = document.getElementById("playlist");
+const audioFileInput = document.getElementById("audioFile");
+const sigmaBtn = document.getElementById("sigmaBtn");
+
+let audioCtx, analyser, sourceNode, currentAudio;
+let dataArray, bufferLength;
 let isPaused = false;
-let angle = 0;
-let pulse = 1;
-let speed = 1;
 let mode = "wave";
-let audioContext, analyser, dataArray, audioSource = null, currentAudio = null;
-let heartbeatData = [], stars = [], dust = [], nebula = [];
-let shakeAmount = 0;
-let root = document.body;
+let speed = parseFloat(speedSlider.value);
+let sigmaActivated = false;
 
-// Galaxy Init
-function initGalaxy() {
-  stars = Array.from({ length: 100 }, () => ({
-    x: Math.random() * canvas.width - centerX,
-    y: Math.random() * canvas.height - centerY,
-    r: Math.random() * 1.5 + 0.5,
-    brightness: Math.random()
-  }));
-  dust = Array.from({ length: 50 }, () => ({
-    x: Math.random() * canvas.width - centerX,
-    y: Math.random() * canvas.height - centerY,
-    r: Math.random() * 2 + 1,
-    angle: Math.random() * Math.PI * 2,
-    speed: 0.001 + Math.random() * 0.003
-  }));
-  nebula = Array.from({ length: 3 }, () => ({
-    radius: 100 + Math.random() * 100,
-    angleOffset: Math.random() * Math.PI * 2,
-    color: `hsla(${Math.random() * 360}, 100%, 60%, 0.3)`
-  }));
-}
-initGalaxy();
-
-// Controls
-document.getElementById("modeSelect").addEventListener("change", e => mode = e.target.value);
-document.getElementById("speedSlider").addEventListener("input", e => speed = parseFloat(e.target.value));
-document.getElementById("toggleBtn").addEventListener("click", () => {
+toggleBtn.addEventListener("click", () => {
+  if (!currentAudio) return;
   isPaused = !isPaused;
-  document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-  if (currentAudio) isPaused ? currentAudio.pause() : currentAudio.play();
+  toggleBtn.textContent = isPaused ? "Play" : "Pause";
+  isPaused ? currentAudio.pause() : currentAudio.play();
 });
 
-// Sigma Button
-document.getElementById("sigmaBtn").addEventListener("click", () => {
+modeSelect.addEventListener("change", (e) => {
+  mode = e.target.value;
+  sigmaActivated = false;
+  document.body.classList.remove("shake");
+});
+
+speedSlider.addEventListener("input", (e) => {
+  speed = parseFloat(e.target.value);
+});
+
+playlist.addEventListener("change", (e) => {
+  if (e.target.value) {
+    loadAudio(e.target.value);
+  }
+});
+
+audioFileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    loadAudio(url);
+  }
+});
+
+sigmaBtn.addEventListener("click", () => {
   mode = "sigma";
-  document.getElementById("modeSelect").value = "";
+  sigmaActivated = true;
+  modeSelect.value = ""; // Clear dropdown
 });
 
-// Playlist
-document.getElementById("playlist").addEventListener("change", function () {
-  const file = this.value;
-  if (!file) return;
-  if (currentAudio) currentAudio.remove();
-  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const audio = new Audio(file);
-  audio.crossOrigin = "anonymous";
-  audio.loop = true;
-  document.body.appendChild(audio);
-  const source = audioContext.createMediaElementSource(audio);
-  analyser = audioContext.createAnalyser();
-  source.connect(analyser);
-  analyser.connect(audioContext.destination);
+function loadAudio(src) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  currentAudio = new Audio(src);
+  currentAudio.crossOrigin = "anonymous";
+
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (analyser) analyser.disconnect();
+
+  sourceNode = audioCtx.createMediaElementSource(currentAudio);
+  analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
-  dataArray = new Uint8Array(analyser.frequencyBinCount);
-  audio.play();
-  currentAudio = audio;
-});
+  bufferLength = analyser.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
 
-// File upload
-document.getElementById("audioFile").addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-  if (currentAudio) currentAudio.remove();
-  const reader = new FileReader();
-  reader.onload = e => {
-    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContext.decodeAudioData(e.target.result, buffer => {
-      if (audioSource) audioSource.stop();
-      audioSource = audioContext.createBufferSource();
-      analyser = audioContext.createAnalyser();
-      audioSource.buffer = buffer;
-      audioSource.connect(analyser);
-      analyser.connect(audioContext.destination);
-      analyser.fftSize = 256;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      audioSource.start(0);
-    });
-  };
-  reader.readAsArrayBuffer(file);
-});
+  sourceNode.connect(analyser);
+  analyser.connect(audioCtx.destination);
 
-// HSV to RGB
-function hsvToRgb(h, s, v) {
-  let f = (n, k = (n + h * 6) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
-  return [f(5) * 255, f(3) * 255, f(1) * 255];
+  currentAudio.play();
+  isPaused = false;
+  toggleBtn.textContent = "Pause";
 }
 
-// Pulse
-function getAudioPulse() {
-  if (analyser && dataArray) {
-    analyser.getByteFrequencyData(dataArray);
-    return 1 + (dataArray.reduce((a, b) => a + b, 0) / dataArray.length) / 128;
-  }
-  return 1;
-}
+function draw() {
+  requestAnimationFrame(draw);
+  if (!analyser || isPaused) return;
 
-// Draw Modes
-function drawWave() {
-  ctx.beginPath();
-  ctx.moveTo(-centerX, 0);
-  if (analyser && dataArray) {
-    analyser.getByteTimeDomainData(dataArray);
-    for (let i = 0; i < dataArray.length; i++) {
-      const x = (i / dataArray.length) * canvas.width - centerX;
-      const y = ((dataArray[i] - 128) / 128) * (pulse * 30);
-      ctx.lineTo(x, y);
-    }
-  }
-  const [r, g, b] = hsvToRgb((angle * 10) % 1, 1, 1);
-  ctx.strokeStyle = `rgb(${r},${g},${b})`;
-  ctx.stroke();
-}
+  analyser.getByteFrequencyData(dataArray);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-function drawCircleWeb() {
-  const rings = 6, lines = 5, maxRadius = 200;
-  for (let i = 1; i <= rings; i++) {
-    ctx.beginPath();
-    ctx.arc(0, 0, (i / rings) * maxRadius * pulse, 0, Math.PI * 2);
-    const [r, g, b] = hsvToRgb((angle + i / rings) % 1, 1, 1);
-    ctx.strokeStyle = `rgb(${r},${g},${b})`;
-    ctx.stroke();
-  }
-  for (let i = 0; i < lines; i++) {
-    const theta = (i / lines) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(theta) * maxRadius * pulse, Math.sin(theta) * maxRadius * pulse);
-    const [r, g, b] = hsvToRgb((angle + i / lines) % 1, 1, 1);
-    ctx.strokeStyle = `rgb(${r},${g},${b})`;
-    ctx.stroke();
-  }
-}
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 150;
+  const beat = dataArray.reduce((a, b) => a + b) / bufferLength;
 
-function drawHeartbeat() {
-  if (analyser && dataArray) {
-    analyser.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    const beatValue = (avg - 100) * 2.5;
-    heartbeatData.push(beatValue);
-  } else {
-    heartbeatData.push(Math.sin(angle * 5) * 50);
-  }
-
-  const spacing = 2.5;
-  const maxPoints = canvas.width / spacing;
-  if (heartbeatData.length > maxPoints) heartbeatData.shift();
-
-  ctx.save();
-  ctx.translate(-centerX, 0);
-  ctx.lineWidth = 2.8;
-
-  for (let i = 0; i < heartbeatData.length - 1; i++) {
-    const y1 = -heartbeatData[i], y2 = -heartbeatData[i + 1];
-    const intensity = Math.abs(y2);
-    let color = intensity > 70 ? "red" : intensity > 40 ? "yellow" : "lime";
-    const x1 = i * spacing, x2 = (i + 1) * spacing;
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-
-  ctx.restore();
-}
-
-// Galaxy BG
-function drawGalaxyBackground() {
-  for (let s of stars) {
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${s.brightness})`;
-    ctx.fill();
-  }
-  for (let d of dust) {
-    d.angle += d.speed;
-    const dx = Math.cos(d.angle) * d.r * 10;
-    const dy = Math.sin(d.angle) * d.r * 10;
-    ctx.beginPath();
-    ctx.arc(d.x + dx, d.y + dy, 1, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(200,200,255,0.2)";
-    ctx.fill();
-  }
-  for (let n of nebula) {
-    ctx.beginPath();
-    let radius = n.radius * pulse * 0.5;
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = n.color;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-  }
-}
-
-// Sigma Mode
-function drawSigma() {
-  drawGalaxyBackground();
-
-  const pulseStrength = getAudioPulse() * 1.5;
-
-  // Beat shake
-  if (pulseStrength > 1.8) {
-    shakeAmount = 10;
-  }
-  if (shakeAmount > 0) {
-    const x = (Math.random() - 0.5) * shakeAmount;
-    const y = (Math.random() - 0.5) * shakeAmount;
-    root.style.transform = `translate(${x}px, ${y}px)`;
-    shakeAmount *= 0.9;
-  } else {
-    root.style.transform = "translate(0, 0)";
-  }
-
-  // Waveform
-  if (analyser && dataArray) {
-    analyser.getByteTimeDomainData(dataArray);
-    ctx.beginPath();
-    ctx.moveTo(-centerX, 0);
-    for (let i = 0; i < dataArray.length; i++) {
-      const x = (i / dataArray.length) * canvas.width - centerX;
-      const y = ((dataArray[i] - 128) / 128) * (pulseStrength * 40);
-      ctx.lineTo(x, y);
-    }
-    ctx.shadowColor = "orange";
-    ctx.shadowBlur = 20;
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  // Sparks
-  for (let i = 0; i < 10; i++) {
-    const x = Math.random() * canvas.width - centerX;
-    const y = Math.random() * canvas.height - centerY;
-    const size = Math.random() * 2 + 1;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, ${Math.random() * 180}, 0, 0.2)`;
-    ctx.fill();
-  }
-}
-
-// Animation Loop
-function animate() {
-  requestAnimationFrame(animate);
-  if (isPaused) return;
-  ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
-  pulse = getAudioPulse();
-  angle += 0.01 * speed;
-
+  // ====== Modes =======
   switch (mode) {
-    case "wave": drawWave(); break;
-    case "circle": drawCircleWeb(); break;
-    case "heartbeat": drawHeartbeat(); break;
-    case "galaxy": drawGalaxyBackground(); break;
-    case "sigma": drawSigma(); break;
+    case "wave":
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#0ff";
+      for (let i = 0; i < bufferLength; i++) {
+        const x = (i / bufferLength) * canvas.width;
+        const y = centerY + Math.sin(i * 0.1 + performance.now() / 200) * dataArray[i] * 0.3;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      break;
+
+    case "circle":
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + i * 0.1})`;
+        ctx.lineWidth = 1 + i;
+        ctx.arc(centerX, centerY, radius + i * 20 + beat * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        const angle = (i / 5) * Math.PI * 2;
+        const x = centerX + Math.cos(angle) * (radius + beat * 0.5);
+        const y = centerY + Math.sin(angle) * (radius + beat * 0.5);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = "#0ff";
+        ctx.stroke();
+      }
+      break;
+
+    case "heartbeat":
+      ctx.beginPath();
+      ctx.strokeStyle = `hsl(${beat * 2}, 100%, 50%)`;
+      ctx.lineWidth = 3;
+      let prevX = 0;
+      for (let x = 0; x < canvas.width; x += 5) {
+        const y = centerY + Math.sin((x + performance.now() / 10) * 0.02) * (beat * 0.3);
+        ctx.lineTo(x, y);
+        prevX = x;
+      }
+      ctx.stroke();
+      break;
+
+    case "galaxy":
+      ctx.fillStyle = `rgba(0,0,30,0.1)`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 100; i++) {
+        const angle = (i / 100) * Math.PI * 2 + performance.now() / 2000;
+        const dist = radius + Math.sin(i + performance.now() / 500) * 50;
+        const x = centerX + Math.cos(angle) * dist;
+        const y = centerY + Math.sin(angle) * dist;
+
+        ctx.beginPath();
+        ctx.arc(x, y, Math.random() * 2 + 1, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${i * 3}, 100%, 70%, 0.7)`;
+        ctx.fill();
+      }
+
+      // Nebula pulse
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + beat * 0.5, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsla(${beat * 2}, 100%, 60%, 0.3)`;
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      break;
+
+    case "sigma":
+      // Sigma mode visuals
+      ctx.fillStyle = `rgba(255, 0, 0, ${0.05 + Math.random() * 0.05})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + beat, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsl(${beat * 3}, 100%, 50%)`;
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      ctx.font = "bold 60px sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText("SIGMA MODE", centerX, centerY);
+
+      // Screen shake sync with beat
+      if (beat > 150) {
+        if (!document.body.classList.contains("shake")) {
+          document.body.classList.add("shake");
+        }
+      } else {
+        document.body.classList.remove("shake");
+      }
+      break;
   }
 }
-animate();
+
+draw();
