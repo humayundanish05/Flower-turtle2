@@ -11,6 +11,12 @@
   <!-- Canvas for Visualizer -->
   <canvas id="webCanvas" width="800" height="400"></canvas>
 
+  <!-- Audio Player -->
+  <audio id="audioPlayer" controls>
+    <source src="track1.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
   <!-- Controls Section -->
   <div class="controls">
     <div class="control-group">
@@ -35,9 +41,9 @@
       <label for="playlist">Select a Track:</label>
       <select id="playlist">
         <option value="">-- Choose from playlist --</option>
-        <option value="track1.mp3">Track 1- mode </option>
-        <option value="track2.mp3">Track 2- Energy Boost</option>
-          <option value="track3.mp3">Track 3- Energy Boost</option>>
+        <option value="track1.mp3">Track 1 - Mode</option>
+        <option value="track2.mp3">Track 2 - Energy Boost</option>
+        <option value="track3.mp3">Track 3 - Slow Beats</option>
       </select>
     </div>
 
