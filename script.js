@@ -205,57 +205,52 @@ function drawHeartbeat() {
     heartbeatData.push(Math.sin(angle * 5) * 50);
   }
 
-  const spacing = 3;
+  const spacing = 2.5;
   const maxPoints = canvas.width / spacing;
   if (heartbeatData.length > maxPoints) heartbeatData.shift();
 
   ctx.save();
   ctx.translate(-centerX, 0);
+  ctx.lineWidth = 2.8;
 
   for (let i = 0; i < heartbeatData.length - 1; i++) {
     const y1 = -heartbeatData[i];
     const y2 = -heartbeatData[i + 1];
     const intensity = Math.abs(y2);
-    let color, glow, thickness;
 
-    if (intensity > 75) {
-      color = "#ff3300";
-      glow = "#ff9900";
-      thickness = 6;
-    } else if (intensity > 50) {
-      color = "#ffff00";
-      glow = "#ffaa00";
-      thickness = 4;
+    let color;
+    if (intensity > 70) {
+      color = "red";
+    } else if (intensity > 40) {
+      color = "yellow";
     } else {
-      color = "#00ff00";
-      glow = "#00ff88";
-      thickness = 2;
+      color = "lime";
     }
 
     const x1 = i * spacing;
     const x2 = (i + 1) * spacing;
 
+    // Draw main line
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = thickness;
-    ctx.shadowColor = glow;
-    ctx.shadowBlur = 20;
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    if (intensity > 80 && i % 5 === 0) {
+    // 🔥 Light burst effect on strong beats
+    if (intensity > 75 && i % 4 === 0) {
       ctx.beginPath();
-      ctx.arc(x2, y2, 3 + Math.random() * 2, 0, 2 * Math.PI);
-      ctx.fillStyle = glow;
-      ctx.shadowBlur = 30;
+      const burstRadius = 2 + Math.random() * 1.5;
+      ctx.arc(x2, y2, burstRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,100,0,0.3)";
+      ctx.shadowColor = "rgba(255,150,0,0.6)";
+      ctx.shadowBlur = 15;
       ctx.fill();
     }
   }
 
   ctx.restore();
 }
-
 function drawVisualizer() {
   if (!isPaused) {
     ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
