@@ -25,7 +25,7 @@ canvas {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(ellipse at center, #000015 0%, #000010 100%);
+  background: transparent;
   z-index: -1;
 }
 
@@ -38,11 +38,9 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(6px);
+  background-color: transparent;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
 }
 
 /* Each control group */
@@ -66,17 +64,16 @@ canvas {
 .controls select {
   padding: 10px 12px;
   font-size: 16px;
-  background-color: rgba(30, 30, 60, 0.3);
+  background-color: transparent;
   color: #fff;
-  border: 1px solid rgba(0, 255, 255, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.5);
   border-radius: 8px;
   transition: 0.3s ease;
   cursor: pointer;
   width: 100%;
-  backdrop-filter: blur(4px);
 }
 
-/* Range specific styling */
+/* Range input special styling */
 .controls input[type="range"] {
   accent-color: #0ff;
 }
@@ -85,7 +82,7 @@ canvas {
 .controls button:hover,
 .controls input[type="file"]:hover,
 .controls select:hover {
-  background-color: rgba(60, 60, 90, 0.4);
+  background-color: rgba(0, 255, 255, 0.1);
   border-color: #0ff;
   box-shadow: 0 0 10px #0ff;
 }
