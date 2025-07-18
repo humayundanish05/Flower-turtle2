@@ -22,17 +22,30 @@ document.getElementById("speedSlider").addEventListener("input", (e) => {
   speed = parseFloat(e.target.value);
 });
 document.getElementById("playlist").addEventListener("change", (e) => {
-  if (e.target.value) loadAudio(e.target.value);
+  if (e.target.value) {
+    loadAudio(e.target.value);
+    setTimeout(() => {
+      togglePlayPause();
+    }, 500);
+  }
 });
 document.getElementById("audioFile").addEventListener("change", (e) => {
-  if (e.target.files[0]) loadAudio(URL.createObjectURL(e.target.files[0]));
+  if (e.target.files[0]) {
+    loadAudio(URL.createObjectURL(e.target.files[0]));
+    setTimeout(() => {
+      togglePlayPause();
+    }, 500);
+  }
 });
 sigmaBtn.addEventListener("click", () => {
   sigmaMode = !sigmaMode;
 });
 
 function togglePlayPause() {
-  if (!currentAudio) return;
+  if (!currentAudio) {
+    alert("⚠️ No audio loaded yet!");
+    return;
+  }
 
   if (audioContext.state === "suspended") {
     audioContext.resume();
@@ -40,10 +53,21 @@ function togglePlayPause() {
 
   isPaused = !isPaused;
   document.getElementById("toggleBtn").textContent = isPaused ? "Play" : "Pause";
-  isPaused ? currentAudio.pause() : currentAudio.play();
+
+  if (isPaused) {
+    currentAudio.pause();
+  } else {
+    currentAudio.play().then(() => {
+      console.log("Manual play successful");
+    }).catch((err) => {
+      alert("❌ Manual play failed: " + err.message);
+    });
+  }
 }
 
 function loadAudio(src) {
+  alert("🎵 Audio loading started...");
+
   if (currentAudio) {
     currentAudio.pause();
     currentAudio = null;
@@ -56,7 +80,6 @@ function loadAudio(src) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  // Resume context right before playing — good fallback
   if (audioContext.state === "suspended") {
     audioContext.resume();
   }
@@ -71,11 +94,11 @@ function loadAudio(src) {
   dataArray = new Uint8Array(bufferLength);
 
   currentAudio.play().then(() => {
-    console.log("Audio started playing");
+    alert("✅ Audio is playing!");
     animate();
   }).catch((err) => {
+    alert("❌ Playback failed: " + err.message);
     console.error("Autoplay failed:", err);
-    alert("Audio play failed: " + err.message);
   });
 }
 
@@ -199,7 +222,5 @@ function drawGalaxy(avg) {
   ctx.strokeStyle = `hsl(${avg * 2}, 100%, 60%)`;
   ctx.lineWidth = 3;
   ctx.stroke();
-}
-
-
+      }
 
