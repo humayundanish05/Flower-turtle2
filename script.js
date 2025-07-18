@@ -175,52 +175,6 @@ function drawCircleWeb() {
   }
 }
 
-function drawHeartbeat() {
-  if (analyser && dataArray) {
-    analyser.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    const beatValue = (avg - 100) * 2.5;
-    heartbeatData.push(beatValue);
-  } else {
-    heartbeatData.push(Math.sin(angle * 5) * 50);
-  }
-
-  const spacing = 2.5; // Increased X spacing between beats
-  const maxPoints = canvas.width / spacing;
-  if (heartbeatData.length > maxPoints) heartbeatData.shift();
-
-  ctx.save();
-  ctx.translate(-centerX, 0);
-
-  ctx.lineWidth = 4.5; // 🔥 Bolder heartbeat line
-
-  for (let i = 0; i < heartbeatData.length - 1; i++) {
-    const y1 = -heartbeatData[i];
-    const y2 = -heartbeatData[i + 1];
-
-    // Color based on intensity
-    const intensity = Math.abs(y2);
-    let color;
-    if (intensity > 70) {
-      color = "red";
-    } else if (intensity > 40) {
-      color = "yellow";
-    } else {
-      color = "lime";
-    }
-
-    const x1 = i * spacing;
-    const x2 = (i + 1) * spacing;
-
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-
-  ctx.restore();
-}
 // 🌌 Galaxy Background Drawing
 function drawGalaxyBackground() {
   // Glowing stars
@@ -237,7 +191,68 @@ function drawGalaxyBackground() {
     let dx = Math.cos(d.angle) * d.r * 10;
     let dy = Math.sin(d.angle) * d.r * 10;
     ctx.beginPath();
-    ctx.arc(d.x + dx, d.y + dy, 1, 0, Math.PI * 2);
+    ctx.arc(d.function drawHeartbeat() {
+  if (analyser && dataArray) {
+    analyser.getByteFrequencyData(dataArray);
+    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    const beatValue = (avg - 100) * 2.5;
+    heartbeatData.push(beatValue);
+  } else {
+    heartbeatData.push(Math.sin(angle * 5) * 50);
+  }
+
+  const spacing = 3; // More spacing for impact
+  const maxPoints = canvas.width / spacing;
+  if (heartbeatData.length > maxPoints) heartbeatData.shift();
+
+  ctx.save();
+  ctx.translate(-centerX, 0);
+
+  for (let i = 0; i < heartbeatData.length - 1; i++) {
+    const y1 = -heartbeatData[i];
+    const y2 = -heartbeatData[i + 1];
+
+    const intensity = Math.abs(y2);
+    let color, glow, thickness;
+
+    if (intensity > 75) {
+      color = "#ff3300"; // Fire red
+      glow = "#ff9900";  // Orange glow
+      thickness = 6;
+    } else if (intensity > 50) {
+      color = "#ffff00"; // Yellow
+      glow = "#ffaa00";  // Warm yellow-orange
+      thickness = 4;
+    } else {
+      color = "#00ff00"; // Green
+      glow = "#00ff88";
+      thickness = 2;
+    }
+
+    const x1 = i * spacing;
+    const x2 = (i + 1) * spacing;
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = thickness;
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 20;
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Optional: draw sparks on high beat
+    if (intensity > 80 && i % 5 === 0) {
+      ctx.beginPath();
+      ctx.arc(x2, y2, 3 + Math.random() * 2, 0, 2 * Math.PI);
+      ctx.fillStyle = glow;
+      ctx.shadowBlur = 30;
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+    }x + dx, d.y + dy, 1, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(200,200,255,0.2)";
     ctx.fill();
   }
