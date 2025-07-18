@@ -209,30 +209,43 @@ function drawGalaxyBackground() {
   }
 }
 
-// 🔥 SIGMA MODE 🔥
 function drawSigma() {
   drawGalaxyBackground();
-  drawWave();
-}
 
-// Render
-function drawVisualizer() {
-  if (!isPaused) {
-    ctx.clearRect(-centerX, -centerY, canvas.width, canvas.height);
-    pulse = getAudioPulse();
+  // Stronger pulse for Sigma
+  const pulseStrength = getAudioPulse() * 1.5;
 
-    switch (mode) {
-      case "wave": drawWave(); break;
-      case "circle": drawCircleWeb(); break;
-      case "heartbeat": drawHeartbeat(); break;
-      case "galaxy": drawGalaxyBackground(); break;
-      case "sigma": drawSigma(); break;
+  // Fiery glowing waveform
+  if (analyser && dataArray) {
+    analyser.getByteTimeDomainData(dataArray);
+    ctx.beginPath();
+    ctx.moveTo(-centerX, 0);
+    for (let i = 0; i < dataArray.length; i++) {
+      const x = (i / dataArray.length) * canvas.width - centerX;
+      const y = ((dataArray[i] - 128) / 128) * (pulseStrength * 40);
+      ctx.lineTo(x, y);
     }
-
-    angle += 0.002 * speed;
+    ctx.shadowColor = "orange";
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0; // reset shadow
   }
-  requestAnimationFrame(drawVisualizer);
+
+  // Fire Sparks
+  for (let i = 0; i < 10; i++) {
+    const x = Math.random() * canvas.width - centerX;
+    const y = Math.random() * canvas.height - centerY;
+    const size = Math.random() * 2 + 1;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, ${Math.random() * 180}, 0, 0.2)`;
+    ctx.fill();
+  }
 }
 
-ctx.lineWidth = 1;
-drawVisualizer();
+document.getElementById("sigmaBtn").addEventListener("click", () => {
+  mode = "sigma";
+  document.getElementById("modeSelect").value = "";
+});
