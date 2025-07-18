@@ -65,14 +65,5 @@
 
   <!-- JavaScript -->
   <script src="script.js" defer></script>
-
-  <!-- Mobile autoplay fix -->
-  <script>
-    document.body.addEventListener("click", () => {
-      if (window.audioContext && audioContext.state === "suspended") {
-        audioContext.resume();
-      }
-    }, { once: true });
-  </script>
 </body>
 </html>
