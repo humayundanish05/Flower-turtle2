@@ -177,8 +177,6 @@ function drawCircleWeb() {
 
 function drawHeartbeat() {
   if (analyser && dataArray) {
-function drawHeartbeat() {
-  if (analyser && dataArray) {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
     const beatValue = (avg - 100) * 2.5;
