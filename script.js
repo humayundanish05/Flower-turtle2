@@ -15,6 +15,7 @@ let audioReady = false;
 let beatCooldown = 0;
 let beatThreshold = 180;
 let shakeFrame = 0;
+let shakeIntensity = 0;
 
 // Resize Canvas for Mobile/Desktop
 function resizeCanvas() {
@@ -67,11 +68,8 @@ function triggerBeat(strength = 1) {
   nebulaPulse = 1;
 
   if (sigmaActive) {
-    shakeFrame = 3; // shake for next 3 frames only
-    document.body.classList.add("shake");
-    setTimeout(() => {
-      document.body.classList.remove("shake");
-    }, 100);
+    shakeFrame = Math.min(10, Math.floor(strength / 20)); // duration based on beat strength
+    shakeIntensity = Math.min(20, strength / 5); // intensity based on beat strength
   }
 }
 
@@ -94,8 +92,8 @@ function draw() {
 
   // Shake only on beat frames
   if (sigmaActive && shakeFrame > 0) {
-    const dx = (Math.random() - 0.5) * 14;
-    const dy = (Math.random() - 0.5) * 14;
+    const dx = (Math.random() - 0.5) * shakeIntensity;
+    const dy = (Math.random() - 0.5) * shakeIntensity;
     ctx.setTransform(1, 0, 0, 1, dx, dy);
     shakeFrame--;
   } else {
