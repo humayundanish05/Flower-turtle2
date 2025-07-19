@@ -13,6 +13,8 @@ let galaxyDust = [];
 let nebulaPulse = 0;
 let sigmaShake = 0;
 let audioReady = false;
+let beatCooldown = 0;
+let beatThreshold = 180;
 
 // Resize Canvas for Mobile/Desktop
 function resizeCanvas() {
@@ -44,24 +46,37 @@ async function setupAudio(src) {
   requestAnimationFrame(draw);
 }
 
-// --- Beat Detection ---
+// --- Beat Detection (Improved for true syncing) ---
 function detectBeat() {
   analyser.getByteFrequencyData(freqArray);
-  const bass = freqArray.slice(0, 30); // bass = low freq
+
+  // Focus on low frequencies (bass)
+  const bass = freqArray.slice(0, 30);
   const avg = bass.reduce((a, b) => a + b, 0) / bass.length;
 
-  const now = performance.now();
-  if (avg > 180 && now - lastBeat > (200 / pulseSpeed)) {
-    lastBeat = now;
-    triggerBeat();
+  // Trigger beat only if above threshold and not in cooldown
+  if (avg > beatThreshold && beatCooldown <= 0) {
+    triggerBeat(avg);
+    beatCooldown = 15; // ~250ms cooldown
   }
+
+  beatCooldown--;
+
+  // Adaptive threshold to avoid false triggers
+  beatThreshold = Math.max(170, avg * 0.9);
 }
 
 // --- Beat Triggered Visual Effects ---
-function triggerBeat() {
+function triggerBeat(strength = 1) {
   nebulaPulse = 1;
+
   if (sigmaActive) {
-    sigmaShake = 8;
+    sigmaShake = Math.min(25, strength / 4); // shake depends on beat energy
+    document.body.classList.add("shake");
+
+    setTimeout(() => {
+      document.body.classList.remove("shake");
+    }, 150);
   }
 }
 
@@ -83,11 +98,11 @@ function draw() {
   if (!audioReady) return;
 
   // Shake effect for Sigma Mode
-  if (sigmaShake > 0) {
+  if (sigmaActive && sigmaShake > 0.5) {
     const dx = (Math.random() - 0.5) * sigmaShake;
     const dy = (Math.random() - 0.5) * sigmaShake;
     ctx.setTransform(1, 0, 0, 1, dx, dy);
-    sigmaShake *= 0.9;
+    sigmaShake *= 0.85; // decay
   } else {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
