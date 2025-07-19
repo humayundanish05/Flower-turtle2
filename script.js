@@ -97,89 +97,80 @@ function draw() {
     ctx.setTransform(1, 0, 0, 1, dx, dy);
     shakeFrame--;
   } else {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  detectBeat();
-
-  switch (currentMode) {
-    case "wave": drawWave(); break;
-    case "circle": drawCircle(); break;
-    case "heartbeat": drawHeartbeat(); break;
-    case "galaxy": drawGalaxy(); break;
-  }
-
-  if (sigmaActive) drawSigmaRing();
-  requestAnimationFrame(draw);
-}
-
-// --- Wave Mode ---
+    ctx.setTransform(1, // --- Wave Mode (Softer, Slower, Colorful) ---
 function drawWave() {
   analyser.getByteTimeDomainData(dataArray);
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#00f6ff";
+  const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+  const hue = (avg * 2) % 360;
+  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
   ctx.beginPath();
   const sliceWidth = canvas.width / dataArray.length;
 
   for (let i = 0; i < dataArray.length; i++) {
     const v = dataArray[i] / 128.0;
-    const y = v * canvas.height / 2;
+    const y = v * canvas.height / 2.2;
     const x = i * sliceWidth;
-
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
 
   ctx.stroke();
 }
 
-// --- Circle Mode ---
+// --- Circle Mode (Spider Web with Curved Lines) ---
 function drawCircle() {
   analyser.getByteFrequencyData(freqArray);
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const radius = 80;
+  const radius = 60;
   ctx.save();
   ctx.translate(centerX, centerY);
+  const hue = (Date.now() / 30) % 360;
 
-  for (let i = 0; i < freqArray.length; i += 10) {
+  for (let i = 0; i < freqArray.length; i += 8) {
     const value = freqArray[i];
     const angle = (i / freqArray.length) * Math.PI * 2;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    const length = value / 2;
+    const noise = Math.sin(Date.now() / 500 + i) * 10;
+    const x = Math.cos(angle) * (radius + noise);
+    const y = Math.sin(angle) * (radius + noise);
+    const length = value / 3;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x * length / 40, y * length / 40);
-    ctx.strokeStyle = `hsl(${i + value}, 100%, 60%)`;
+    ctx.quadraticCurveTo(0, 0, x * length / 40, y * length / 40);
+    ctx.strokeStyle = `hsl(${hue + i}, 100%, 60%)`;
     ctx.stroke();
   }
 
   ctx.restore();
 }
 
-// --- Heartbeat Mode ---
+// --- Heartbeat Mode (Hospital Style, Running Right to Left) ---
+let heartbeatX = 0;
 function drawHeartbeat() {
   analyser.getByteTimeDomainData(dataArray);
-  ctx.strokeStyle = "#00ff66";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
   const mid = canvas.height / 2;
-  const slice = canvas.width / dataArray.length;
+  const slice = 2; // pixel spacing
+  ctx.lineWidth = 2;
+  const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+  const hue = (avg * 2) % 360;
+  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
 
-  for (let i = 0; i < dataArray.length; i++) {
+  ctx.beginPath();
+  ctx.moveTo(canvas.width, mid);
+
+  for (let i = dataArray.length - 1; i >= 0; i--) {
     const v = dataArray[i] / 128.0;
-    const y = mid + (v - 1) * 50;
-    const x = i * slice;
+    const y = mid + (v - 1) * 40;
+    const x = canvas.width - (dataArray.length - i) * slice;
     ctx.lineTo(x, y);
   }
 
   ctx.stroke();
 }
 
-// --- Galaxy Mode ---
+// --- Galaxy Mode (Enhanced Galaxy, No Circle, Sync to Music) ---
 function drawGalaxy() {
-  // Background stars
+  // Create background stars
   if (stars.length < 100) {
     for (let i = 0; i < 100; i++) {
       stars.push({
@@ -202,6 +193,41 @@ function drawGalaxy() {
     star.y += star.speed;
     if (star.y > canvas.height) star.y = 0;
   }
+
+  // Draw galaxy dust and rings synced with beat
+  analyser.getByteFrequencyData(freqArray);
+  const bass = freqArray.slice(0, 20);
+  const bassAvg = bass.reduce((a, b) => a + b, 0) / bass.length;
+  const ringRadius = 80 + bassAvg / 3;
+  const hue = (bassAvg * 2 + Date.now() / 20) % 360;
+
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.beginPath();
+  ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.5)`;
+  ctx.lineWidth = 4 + Math.sin(Date.now() / 200) * 2;
+  ctx.stroke();
+  ctx.restore();
+}
+0, 0, 1, 0, 0);
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  detectBeat();
+
+  switch (currentMode) {
+    case "wave": drawWave(); break;
+    case "circle": drawCircle(); break;
+    case "heartbeat": drawHeartbeat(); break;
+    case "galaxy": drawGalaxy(); break;
+  }
+
+  if (sigmaActive) drawSigmaRing();
+  requestAnimationFrame(draw);
+}
+
+
 
   // Space dust
   if (galaxyDust.length < 60) {
