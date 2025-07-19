@@ -1,7 +1,7 @@
 // --- Initialization ---
 const canvas = document.getElementById("webCanvas");
 const ctx = canvas.getContext("2d");
-let audioCtx, analyser, sourceNode, audioBufferSource;
+let audioCtx, analyser, sourceNode;
 let dataArray, freqArray;
 let audio = new Audio();
 let sigmaActive = false;
@@ -11,10 +11,10 @@ let lastBeat = 0;
 let stars = [];
 let galaxyDust = [];
 let nebulaPulse = 0;
-let sigmaShake = 0;
 let audioReady = false;
 let beatCooldown = 0;
 let beatThreshold = 180;
+let shakeFrame = 0;
 
 // Resize Canvas for Mobile/Desktop
 function resizeCanvas() {
@@ -46,23 +46,19 @@ async function setupAudio(src) {
   requestAnimationFrame(draw);
 }
 
-// --- Beat Detection (Improved for true syncing) ---
+// --- Beat Detection (Improved & Synced) ---
 function detectBeat() {
   analyser.getByteFrequencyData(freqArray);
 
-  // Focus on low frequencies (bass)
   const bass = freqArray.slice(0, 30);
   const avg = bass.reduce((a, b) => a + b, 0) / bass.length;
 
-  // Trigger beat only if above threshold and not in cooldown
   if (avg > beatThreshold && beatCooldown <= 0) {
     triggerBeat(avg);
-    beatCooldown = 15; // ~250ms cooldown
+    beatCooldown = 15;
   }
 
   beatCooldown--;
-
-  // Adaptive threshold to avoid false triggers
   beatThreshold = Math.max(170, avg * 0.9);
 }
 
@@ -71,12 +67,11 @@ function triggerBeat(strength = 1) {
   nebulaPulse = 1;
 
   if (sigmaActive) {
-    sigmaShake = Math.min(25, strength / 4); // shake depends on beat energy
+    shakeFrame = 3; // shake for next 3 frames only
     document.body.classList.add("shake");
-
     setTimeout(() => {
       document.body.classList.remove("shake");
-    }, 150);
+    }, 100);
   }
 }
 
@@ -97,12 +92,12 @@ function drawSigmaRing() {
 function draw() {
   if (!audioReady) return;
 
-  // Shake effect for Sigma Mode
-  if (sigmaActive && sigmaShake > 0.5) {
-    const dx = (Math.random() - 0.5) * sigmaShake;
-    const dy = (Math.random() - 0.5) * sigmaShake;
+  // Shake only on beat frames
+  if (sigmaActive && shakeFrame > 0) {
+    const dx = (Math.random() - 0.5) * 14;
+    const dy = (Math.random() - 0.5) * 14;
     ctx.setTransform(1, 0, 0, 1, dx, dy);
-    sigmaShake *= 0.85; // decay
+    shakeFrame--;
   } else {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
