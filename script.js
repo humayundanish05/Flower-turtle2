@@ -15,9 +15,8 @@ let audioReady = false;
 let beatCooldown = 0;
 let beatThreshold = 180;
 let shakeFrame = 0;
-let shakeIntensity = 0; // NEW
+let shakeIntensity = 0;
 
-// Resize Canvas for Mobile/Desktop
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = 400;
@@ -47,130 +46,116 @@ async function setupAudio(src) {
   requestAnimationFrame(draw);
 }
 
-// --- Beat Detection (Improved & Synced) ---
+// --- Beat Detection ---
 function detectBeat() {
   analyser.getByteFrequencyData(freqArray);
-
   const bass = freqArray.slice(0, 30);
   const avg = bass.reduce((a, b) => a + b, 0) / bass.length;
-
   if (avg > beatThreshold && beatCooldown <= 0) {
     triggerBeat(avg);
     beatCooldown = 15;
   }
-
   beatCooldown--;
   beatThreshold = Math.max(170, avg * 0.9);
 }
 
-// --- Beat Triggered Visual Effects ---
+// --- Beat Effects ---
 function triggerBeat(strength = 1) {
   nebulaPulse = 1;
-
   if (sigmaActive) {
-    shakeFrame = Math.min(8, Math.floor(strength / 18)); // duration
-    shakeIntensity = Math.min(25, strength / 4); // intensity
+    shakeFrame = Math.min(8, Math.floor(strength / 18));
+    shakeIntensity = Math.min(25, strength / 4);
   }
-}
-
-// --- Sigma Mode Animation ---
-function drawSigmaRing() {
-  ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.beginPath();
-  ctx.strokeStyle = "rgba(255, 100, 0, 0.7)";
-  ctx.lineWidth = 4;
-  const radius = 120 + Math.sin(Date.now() / 100) * 10;
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
 }
 
 // --- Main Drawing Loop ---
 function draw() {
   if (!audioReady) return;
-
-  // Shake canvas if Sigma mode is active
   if (sigmaActive && shakeFrame > 0) {
     const dx = (Math.random() - 0.5) * shakeIntensity;
     const dy = (Math.random() - 0.5) * shakeIntensity;
     ctx.setTransform(1, 0, 0, 1, dx, dy);
     shakeFrame--;
   } else {
-    ctx.setTransform(1, // --- Wave Mode (Softer, Slower, Colorful) ---
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  detectBeat();
+
+  switch (currentMode) {
+    case "wave": drawWave(); break;
+    case "circle": drawCircle(); break;
+    case "heartbeat": drawHeartbeat(); break;
+    case "galaxy": drawGalaxy(); break;
+  }
+
+  if (sigmaActive) drawSigmaRing();
+  requestAnimationFrame(draw);
+}
+
+// --- Wave Mode ---
 function drawWave() {
   analyser.getByteTimeDomainData(dataArray);
   ctx.lineWidth = 2;
-  const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-  const hue = (avg * 2) % 360;
-  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+  ctx.strokeStyle = `hsl(${Date.now() % 360}, 100%, 60%)`;
   ctx.beginPath();
   const sliceWidth = canvas.width / dataArray.length;
-
   for (let i = 0; i < dataArray.length; i++) {
     const v = dataArray[i] / 128.0;
-    const y = v * canvas.height / 2.2;
+    const y = canvas.height / 2 + (v - 1) * 40;
     const x = i * sliceWidth;
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
-
   ctx.stroke();
 }
 
-// --- Circle Mode (Spider Web with Curved Lines) ---
+// --- Circle Mode (Spider Web) ---
 function drawCircle() {
   analyser.getByteFrequencyData(freqArray);
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const radius = 60;
   ctx.save();
   ctx.translate(centerX, centerY);
-  const hue = (Date.now() / 30) % 360;
-
-  for (let i = 0; i < freqArray.length; i += 8) {
-    const value = freqArray[i];
-    const angle = (i / freqArray.length) * Math.PI * 2;
-    const noise = Math.sin(Date.now() / 500 + i) * 10;
-    const x = Math.cos(angle) * (radius + noise);
-    const y = Math.sin(angle) * (radius + noise);
-    const length = value / 3;
+  const rings = 5;
+  for (let r = 1; r <= rings; r++) {
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(0, 0, x * length / 40, y * length / 40);
-    ctx.strokeStyle = `hsl(${hue + i}, 100%, 60%)`;
+    for (let i = 0; i <= 360; i += 5) {
+      const angle = i * Math.PI / 180;
+      const freqIndex = Math.floor((i / 360) * freqArray.length);
+      const offset = freqArray[freqIndex] * 0.3;
+      const radius = r * 20 + offset;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `hsl(${r * 60 + Date.now() % 360}, 100%, 60%)`;
     ctx.stroke();
   }
-
   ctx.restore();
 }
 
-// --- Heartbeat Mode (Hospital Style, Running Right to Left) ---
-let heartbeatX = 0;
+// --- Heartbeat Mode ---
 function drawHeartbeat() {
   analyser.getByteTimeDomainData(dataArray);
-  const mid = canvas.height / 2;
-  const slice = 2; // pixel spacing
+  ctx.strokeStyle = `hsl(${Date.now() % 360}, 100%, 60%)`;
   ctx.lineWidth = 2;
-  const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-  const hue = (avg * 2) % 360;
-  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+  const mid = canvas.height / 2;
+  const slice = canvas.width / dataArray.length;
+  const scrollSpeed = 2;
 
   ctx.beginPath();
-  ctx.moveTo(canvas.width, mid);
-
-  for (let i = dataArray.length - 1; i >= 0; i--) {
+  for (let i = 0; i < dataArray.length; i++) {
     const v = dataArray[i] / 128.0;
-    const y = mid + (v - 1) * 40;
-    const x = canvas.width - (dataArray.length - i) * slice;
+    const y = mid + (v - 1) * 60;
+    const x = canvas.width - i * scrollSpeed;
     ctx.lineTo(x, y);
   }
-
   ctx.stroke();
 }
 
-// --- Galaxy Mode (Enhanced Galaxy, No Circle, Sync to Music) ---
+// --- Galaxy Mode ---
 function drawGalaxy() {
-  // Create background stars
   if (stars.length < 100) {
     for (let i = 0; i < 100; i++) {
       stars.push({
@@ -194,42 +179,6 @@ function drawGalaxy() {
     if (star.y > canvas.height) star.y = 0;
   }
 
-  // Draw galaxy dust and rings synced with beat
-  analyser.getByteFrequencyData(freqArray);
-  const bass = freqArray.slice(0, 20);
-  const bassAvg = bass.reduce((a, b) => a + b, 0) / bass.length;
-  const ringRadius = 80 + bassAvg / 3;
-  const hue = (bassAvg * 2 + Date.now() / 20) % 360;
-
-  ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.beginPath();
-  ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.5)`;
-  ctx.lineWidth = 4 + Math.sin(Date.now() / 200) * 2;
-  ctx.stroke();
-  ctx.restore();
-}
-0, 0, 1, 0, 0);
-  }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  detectBeat();
-
-  switch (currentMode) {
-    case "wave": drawWave(); break;
-    case "circle": drawCircle(); break;
-    case "heartbeat": drawHeartbeat(); break;
-    case "galaxy": drawGalaxy(); break;
-  }
-
-  if (sigmaActive) drawSigmaRing();
-  requestAnimationFrame(draw);
-}
-
-
-
-  // Space dust
   if (galaxyDust.length < 60) {
     for (let i = 0; i < 60; i++) {
       galaxyDust.push({
@@ -246,13 +195,12 @@ function drawGalaxy() {
     p.angle += p.speed;
     const x = Math.cos(p.angle) * p.distance;
     const y = Math.sin(p.angle) * p.distance;
-    ctx.fillStyle = `hsla(${i * 6}, 100%, 60%, 0.5)`;
+    ctx.fillStyle = `hsla(${i * 6 + Date.now() % 360}, 100%, 50%, 0.5)`;
     ctx.beginPath();
     ctx.arc(x, y, 2, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  // Nebula Pulse
   if (nebulaPulse > 0.01) {
     ctx.beginPath();
     ctx.arc(0, 0, 80 + 50 * nebulaPulse, 0, Math.PI * 2);
@@ -263,9 +211,22 @@ function drawGalaxy() {
   }
 
   ctx.restore();
-        }
+}
 
-// Controls
+// --- Sigma Ring ---
+function drawSigmaRing() {
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(255, 100, 0, 0.7)";
+  ctx.lineWidth = 4;
+  const radius = 120 + Math.sin(Date.now() / 100) * 10;
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// --- Controls ---
 document.getElementById("toggleBtn").addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
@@ -301,10 +262,6 @@ document.getElementById("audioFile").addEventListener("change", (e) => {
     const url = URL.createObjectURL(file);
     setupAudio(url);
   }
-});
-
-document.getElementById("debugPlay").addEventListener("click", () => {
-  if (audio && audio.paused) audio.play();
 });
 
 window.addEventListener("load", () => {
