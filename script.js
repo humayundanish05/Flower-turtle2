@@ -147,39 +147,49 @@ function drawCircle() {
   ctx.restore();
 }
 
-// --- Heartbeat Mode: Real Hospital Monitor Style ---
-let heartbeatX = 0;
-let prevY = canvas.height / 2;
+// --- Heartbeat Mode: Real ECG Style (Left to Right) ---
+let heartbeatData = new Array(500).fill(canvas.height / 2); // ECG history buffer
 
 function drawHeartbeat() {
   analyser.getByteFrequencyData(freqArray);
   const beat = getBeatStrength();
+  const midY = canvas.height / 2;
   const hue = (beat * 5 + Date.now() / 50) % 360;
 
-  // Scroll canvas left
-  const scrollSpeed = 4;
-  const width = canvas.width;
-  const height = canvas.height;
-  const midY = height / 2;
+  // Generate new point
+  let newY = midY;
 
-  const spike = beat > 160; // Only spike on higher beat
-
-  ctx.drawImage(canvas, -scrollSpeed, 0);
-  ctx.clearRect(width - scrollSpeed, 0, scrollSpeed, height);
-
-  ctx.beginPath();
-  ctx.moveTo(width - scrollSpeed - 1, prevY);
-
-  // Simulate heartbeat: flat line, sudden spike, back to flat
-  let y = midY;
-  if (spike) {
-    const spikeHeight = Math.random() * 40 + 40;
-    y = midY - spikeHeight;
+  if (beat > 160) {
+    // Simulate sharp ECG spike
+    newY = midY - (Math.random() * 40 + 30);
+  } else if (beat > 140) {
+    // Small flutter
+    newY = midY - (Math.random() * 10);
   }
 
-  prevY = y;
+  // Add new point to the trail
+  heartbeatData.push(newY);
 
-  ctx.lineTo(width - 1, y);
+  // Remove old points to scroll left
+  if (heartbeatData.length > canvas.width) {
+    heartbeatData.shift();
+  }
+
+  // Clear and redraw
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.beginPath();
+  for (let i = 0; i < heartbeatData.length; i++) {
+    const y = heartbeatData[i];
+    const x = i;
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+
   ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
   ctx.lineWidth = 2;
   ctx.stroke();
