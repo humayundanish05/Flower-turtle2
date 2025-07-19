@@ -6,7 +6,7 @@
 }
 
 body {
-  background: transparent;
+  background: radial-gradient(ellipse at center, #000010 0%, #000005 100%);
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
@@ -26,7 +26,7 @@ body.shake {
   background-color: transparent;
 }
 
-/* Canvas Styling (Galaxy background only) */
+/* Canvas Styling with glowing galaxy aura */
 canvas {
   position: absolute;
   top: 0;
@@ -39,7 +39,7 @@ canvas {
   animation: slowPulse 5s infinite alternate;
 }
 
-/* Controls Container (fully transparent) */
+/* Controls Container - fully transparent */
 .controls {
   position: relative;
   z-index: 1;
@@ -50,9 +50,10 @@ canvas {
   gap: 20px;
   background: transparent;
   backdrop-filter: none;
-  padding: 20px;
   border: none;
   box-shadow: none;
+  padding: 20px;
+  border-radius: 16px;
 }
 
 /* Control groups */
@@ -77,16 +78,16 @@ canvas {
 .controls select {
   padding: 10px 12px;
   font-size: 16px;
-  background-color: transparent;
+  background-color: rgba(0, 255, 255, 0.05);
   color: #fff;
-  border: 1px solid rgba(0, 255, 255, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.5);
   border-radius: 8px;
   transition: 0.3s ease;
   cursor: pointer;
   width: 100%;
 }
 
-/* Range accent */
+/* Range input special styling */
 .controls input[type="range"] {
   accent-color: #0ff;
 }
@@ -95,7 +96,7 @@ canvas {
 .controls button:hover,
 .controls input[type="file"]:hover,
 .controls select:hover {
-  background-color: rgba(0, 255, 255, 0.1);
+  background-color: rgba(0, 255, 255, 0.12);
   border-color: #0ff;
   box-shadow: 0 0 10px #0ff;
   transform: scale(1.02);
@@ -104,7 +105,7 @@ canvas {
 /* Sigma Button Styling */
 #sigmaBtn {
   border-color: #ff0055;
-  background-color: transparent;
+  background-color: rgba(255, 0, 85, 0.1);
   font-weight: bold;
   color: #ff0055;
   text-shadow: 0 0 5px #ff0055;
@@ -112,19 +113,20 @@ canvas {
 }
 
 #sigmaBtn:hover {
-  background-color: rgba(255, 0, 85, 0.1);
+  background-color: rgba(255, 0, 85, 0.2);
   box-shadow: 0 0 12px #ff0055;
 }
 
+/* Sigma Button Active (optional style toggle) */
 #sigmaBtn.active {
   border-color: #ff0066;
   box-shadow: 0 0 15px #ff0066, inset 0 0 8px #ff0044;
-  background: rgba(255, 0, 85, 0.2);
+  background: rgba(255, 0, 85, 0.3);
 }
 
 /* Debug Button */
 #debugPlay {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.05);
   color: #0ff;
   border: 1px solid #0ff;
   font-size: 12px;
@@ -142,20 +144,20 @@ canvas {
   100% { transform: translate(0px, 0px); }
 }
 
-/* Galaxy Pulse */
+/* Slow glowing pulse for background or nebula */
 @keyframes slowPulse {
   from { filter: drop-shadow(0 0 20px #0ff3); }
   to   { filter: drop-shadow(0 0 40px #0ff7); }
 }
 
-/* Fire ring for Sigma */
+/* Fire ring animation for Sigma */
 @keyframes firePulse {
   0%   { box-shadow: 0 0 5px #f06, inset 0 0 5px #f36; }
   50%  { box-shadow: 0 0 12px #f36, inset 0 0 10px #f06; }
   100% { box-shadow: 0 0 6px #f06, inset 0 0 4px #f36; }
 }
 
-/* Responsive */
+/* Responsive Adjustments */
 @media (max-width: 600px) {
   body {
     padding: 10px;
