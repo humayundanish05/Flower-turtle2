@@ -15,7 +15,7 @@ let audioReady = false;
 let beatCooldown = 0;
 let beatThreshold = 180;
 let shakeFrame = 0;
-let shakeIntensity = 0;
+let shakeIntensity = 0; // NEW
 
 // Resize Canvas for Mobile/Desktop
 function resizeCanvas() {
@@ -68,8 +68,8 @@ function triggerBeat(strength = 1) {
   nebulaPulse = 1;
 
   if (sigmaActive) {
-    shakeFrame = Math.min(10, Math.floor(strength / 20)); // duration based on beat strength
-    shakeIntensity = Math.min(20, strength / 5); // intensity based on beat strength
+    shakeFrame = Math.min(8, Math.floor(strength / 18)); // duration
+    shakeIntensity = Math.min(25, strength / 4); // intensity
   }
 }
 
@@ -90,7 +90,7 @@ function drawSigmaRing() {
 function draw() {
   if (!audioReady) return;
 
-  // Shake only on beat frames
+  // Shake canvas if Sigma mode is active
   if (sigmaActive && shakeFrame > 0) {
     const dx = (Math.random() - 0.5) * shakeIntensity;
     const dy = (Math.random() - 0.5) * shakeIntensity;
