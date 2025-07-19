@@ -94,67 +94,109 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-// --- Wave Mode ---
+// --- Helper Function ---
+function getAverageVolume(array) {
+  let sum = 0;
+  for (let i = 0; i < array.length; i++) {
+    sum += array[i];
+  }
+  return sum / array.length;
+}
+
+// --- Wave Mode: Slower, Softer, Color-changing ---
 function drawWave() {
   analyser.getByteTimeDomainData(dataArray);
   ctx.lineWidth = 2;
-  ctx.strokeStyle = `hsl(${Date.now() % 360}, 100%, 60%)`;
+
+  const beat = getAverageVolume(dataArray);
+  const hue = (beat * 2 + Date.now() / 50) % 360;
+  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+
   ctx.beginPath();
   const sliceWidth = canvas.width / dataArray.length;
-  for (let i = 0; i < dataArray.length; i++) {
+  let x = 0;
+
+  for (let i = 0; i < dataArray.length; i += 2) { // Slower wave
     const v = dataArray[i] / 128.0;
-    const y = canvas.height / 2 + (v - 1) * 40;
-    const x = i * sliceWidth;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    const y = canvas.height / 2 + (v - 1) * 40; // Softer wave
+    ctx.lineTo(x, y);
+    x += sliceWidth * 2;
   }
+
   ctx.stroke();
 }
 
-// --- Circle Mode (Spider Web) ---
+// --- Circle Mode → Realistic Spider Web with Colors ---
 function drawCircle() {
   analyser.getByteFrequencyData(freqArray);
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
+  const maxRadius = Math.min(centerX, centerY) - 20;
+  const rings = 6;
+  const lines = 5;
+
   ctx.save();
   ctx.translate(centerX, centerY);
-  const rings = 5;
+
+  const beat = getAverageVolume(freqArray);
+  const hue = (beat * 3 + Date.now() / 40) % 360;
+
+  // Draw curly spider web rings
   for (let r = 1; r <= rings; r++) {
     ctx.beginPath();
-    for (let i = 0; i <= 360; i += 5) {
-      const angle = i * Math.PI / 180;
-      const freqIndex = Math.floor((i / 360) * freqArray.length);
-      const offset = freqArray[freqIndex] * 0.3;
-      const radius = r * 20 + offset;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    for (let a = 0; a <= Math.PI * 2; a += 0.05) {
+      const radius = (r / rings) * maxRadius + Math.sin(a * 6 + beat / 10) * 5;
+      const x = Math.cos(a) * radius;
+      const y = Math.sin(a) * radius;
+      ctx.lineTo(x, y);
     }
-    ctx.strokeStyle = `hsl(${r * 60 + Date.now() % 360}, 100%, 60%)`;
+    ctx.strokeStyle = `hsl(${hue + r * 20}, 100%, 60%)`;
     ctx.stroke();
   }
+
+  // Draw radial strands
+  for (let l = 0; l < lines; l++) {
+    const angle = (l / lines) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(
+      Math.cos(angle) * maxRadius,
+      Math.sin(angle) * maxRadius
+    );
+    ctx.strokeStyle = `hsl(${hue + l * 30}, 100%, 70%)`;
+    ctx.stroke();
+  }
+
   ctx.restore();
 }
 
-// --- Heartbeat Mode ---
+// --- Heartbeat Mode → Hospital Monitor Style ---
 function drawHeartbeat() {
   analyser.getByteTimeDomainData(dataArray);
-  ctx.strokeStyle = `hsl(${Date.now() % 360}, 100%, 60%)`;
-  ctx.lineWidth = 2;
   const mid = canvas.height / 2;
-  const slice = canvas.width / dataArray.length;
-  const scrollSpeed = 2;
+  const slice = 2;
+  const beat = getAverageVolume(dataArray);
+  const hue = (beat * 3 + Date.now() / 50) % 360;
+  ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
 
+  ctx.lineWidth = 2;
+
+  // Scroll existing canvas to left
+  ctx.drawImage(canvas, -slice, 0);
+
+  // Draw new line at right
   ctx.beginPath();
-  for (let i = 0; i < dataArray.length; i++) {
+  for (let i = 0; i < dataArray.length; i += 5) {
     const v = dataArray[i] / 128.0;
-    const y = mid + (v - 1) * 60;
-    const x = canvas.width - i * scrollSpeed;
+    const y = mid + (v - 1) * 40;
+    const x = canvas.width - (dataArray.length - i) / 5;
     ctx.lineTo(x, y);
   }
+
   ctx.stroke();
 }
 
-// --- Galaxy Mode ---
+// --- Galaxy Mode → Realistic Galaxy Syncing with Beat ---
 function drawGalaxy() {
   if (stars.length < 100) {
     for (let i = 0; i < 100; i++) {
@@ -167,47 +209,40 @@ function drawGalaxy() {
     }
   }
 
-  ctx.fillStyle = "rgba(5,5,20,0.3)";
+  // Space background
+  ctx.fillStyle = "rgba(5,5,20,0.2)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Stars
   for (let star of stars) {
     ctx.beginPath();
     ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffffffaa";
+    ctx.fillStyle = "#ffffffcc";
     ctx.fill();
     star.y += star.speed;
     if (star.y > canvas.height) star.y = 0;
   }
 
-  if (galaxyDust.length < 60) {
-    for (let i = 0; i < 60; i++) {
-      galaxyDust.push({
-        angle: Math.random() * Math.PI * 2,
-        distance: Math.random() * 150 + 100,
-        speed: Math.random() * 0.01 + 0.001
-      });
-    }
-  }
+  // Galaxy swirl
+  analyser.getByteFrequencyData(freqArray);
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const beat = getAverageVolume(freqArray);
+  const hue = (beat * 2 + Date.now() / 50) % 360;
 
   ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  galaxyDust.forEach((p, i) => {
-    p.angle += p.speed;
-    const x = Math.cos(p.angle) * p.distance;
-    const y = Math.sin(p.angle) * p.distance;
-    ctx.fillStyle = `hsla(${i * 6 + Date.now() % 360}, 100%, 50%, 0.5)`;
-    ctx.beginPath();
-    ctx.arc(x, y, 2, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  ctx.translate(centerX, centerY);
+  ctx.rotate(Date.now() / 5000);
 
-  if (nebulaPulse > 0.01) {
+  for (let i = 0; i < 200; i++) {
+    const angle = i * 0.1;
+    const radius = i * 0.5 + Math.sin(beat / 10) * 10;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
     ctx.beginPath();
-    ctx.arc(0, 0, 80 + 50 * nebulaPulse, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255, 0, 255, ${nebulaPulse})`;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    nebulaPulse *= 0.85;
+    ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+    ctx.fillStyle = `hsl(${hue + i}, 100%, 70%)`;
+    ctx.fill();
   }
 
   ctx.restore();
