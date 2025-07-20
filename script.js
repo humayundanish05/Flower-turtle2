@@ -69,6 +69,13 @@ function triggerBeat(strength = 1) {
 }
 
 // --- Main Drawing Loop ---
+
+// --- Setup Global Elements ---
+let stars = [];
+let dataArray = new Uint8Array(analyser.fftSize);
+let freqArray = new Uint8Array(analyser.frequencyBinCount);
+let heartbeatData = new Array(500).fill(canvas.height / 2); // ECG trail buffer
+
 // --- Helper Functions ---
 function getAverageVolume(array) {
   let sum = 0;
@@ -83,7 +90,7 @@ function getBeatStrength() {
   return getAverageVolume(freqArray);
 }
 
-// --- Wave Mode ---
+// --- 1. Wave Mode ---
 function drawWave() {
   analyser.getByteTimeDomainData(dataArray);
   const beat = getBeatStrength();
@@ -98,7 +105,7 @@ function drawWave() {
 
   for (let i = 0; i < dataArray.length; i += 2) {
     const v = dataArray[i] / 128.0;
-    const y = canvas.height / 2 + (v - 1) * 40 * (beat / 50); // Softer with beat
+    const y = canvas.height / 2 + (v - 1) * 40 * (beat / 50);
     ctx.lineTo(x, y);
     x += sliceWidth * 2;
   }
@@ -106,7 +113,7 @@ function drawWave() {
   ctx.stroke();
 }
 
-// --- Circle Mode (Spider Web Realistic) ---
+// --- 2. Circle Mode (Spider Web) ---
 function drawCircle() {
   analyser.getByteFrequencyData(freqArray);
   const centerX = canvas.width / 2;
@@ -121,7 +128,6 @@ function drawCircle() {
   ctx.save();
   ctx.translate(centerX, centerY);
 
-  // Spider web rings
   for (let r = 1; r <= rings; r++) {
     ctx.beginPath();
     for (let a = 0; a <= Math.PI * 2; a += 0.05) {
@@ -134,7 +140,6 @@ function drawCircle() {
     ctx.stroke();
   }
 
-  // Spider web strands
   for (let l = 0; l < lines; l++) {
     const angle = (l / lines) * Math.PI * 2;
     ctx.beginPath();
@@ -147,39 +152,32 @@ function drawCircle() {
   ctx.restore();
 }
 
-// --- Heartbeat Mode: Real ECG Style (Left to Right, Lower Beat Sensitivity) ---
-let heartbeatData = new Array(500).fill(canvas.height / 2); // ECG trail buffer
-
+// --- 3. Heartbeat Mode (Hospital ECG Style with Threshold 120) ---
 function drawHeartbeat() {
   analyser.getByteFrequencyData(freqArray);
-  const beat = getBeatStrength(); // average volume of current frequencies
+  const beat = getBeatStrength();
   const midY = canvas.height / 2;
   const hue = (beat * 5 + Date.now() / 50) % 360;
 
-  // Generate new Y point based on lower thresholds
   let newY = midY;
 
   if (beat > 120) {
-    // Simulate ECG spike more often
-    newY = midY - (Math.random() * 30 + 20); // bigger spike
-  } else if (beat > 70) {
-    // Light flutter on even softer beats
-    newY = midY - (Math.random() * 8 + 4);
+    newY = midY - (Math.random() * 30 + 20); // spike
+  } else if (beat > 90) {
+    newY = midY - (Math.random() * 8 + 4);   // flutter
+  } else {
+    newY = midY + Math.sin(Date.now() / 100) * 2; // idle baseline
   }
 
-  // Add point to scrolling ECG trail
   heartbeatData.push(newY);
 
-  // Maintain fixed width (scrolling)
   if (heartbeatData.length > canvas.width) {
     heartbeatData.shift();
   }
 
-  // Clear previous frame
   ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw the ECG line
   ctx.beginPath();
   for (let i = 0; i < heartbeatData.length; i++) {
     const y = heartbeatData[i];
@@ -192,7 +190,7 @@ function drawHeartbeat() {
   ctx.stroke();
 }
 
-// --- Galaxy Mode: Realistic Galaxy with Beat Sync ---
+// --- 4. Galaxy Mode (Realistic, Beat Synced) ---
 function drawGalaxy() {
   if (stars.length < 100) {
     for (let i = 0; i < 100; i++) {
@@ -205,11 +203,9 @@ function drawGalaxy() {
     }
   }
 
-  // Background
   ctx.fillStyle = "rgba(5,5,20,0.2)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Stars
   for (let star of stars) {
     ctx.beginPath();
     ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
@@ -219,8 +215,6 @@ function drawGalaxy() {
     if (star.y > canvas.height) star.y = 0;
   }
 
-  // Galaxy swirl
-  analyser.getByteFrequencyData(freqArray);
   const beat = getBeatStrength();
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
@@ -242,31 +236,7 @@ function drawGalaxy() {
   }
 
   ctx.restore();
-    }function draw() {
-  if (!audioReady) return;
-  if (sigmaActive && shakeFrame > 0) {
-    const dx = (Math.random() - 0.5) * shakeIntensity;
-    const dy = (Math.random() - 0.5) * shakeIntensity;
-    ctx.setTransform(1, 0, 0, 1, dx, dy);
-    shakeFrame--;
-  } else {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  detectBeat();
-
-  switch (currentMode) {
-    case "wave": drawWave(); break;
-    case "circle": drawCircle(); break;
-    case "heartbeat": drawHeartbeat(); break;
-    case "galaxy": drawGalaxy(); break;
-  }
-
-  if (sigmaActive) drawSigmaRing();
-  requestAnimationFrame(draw);
-}
-
+               }
 
 
 // --- Sigma Ring ---
