@@ -52,11 +52,12 @@ canvas {
   background: transparent;
   z-index: -1;
 
-  /* Subtle blur with glow */
-  filter: blur(0.8px) drop-shadow(0 0 20px rgba(0, 255, 255, 0.15));
+  /* Ultra-light blur with soft glow */
+  filter: blur(0.4px) drop-shadow(0 0 10px rgba(0, 255, 255, 0.1));
 
   animation: slowPulse 5s infinite alternate;
 }
+
 /* --- Controls Glass Blur Panel --- */
 .controls {
   position: relative;
