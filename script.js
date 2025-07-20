@@ -136,18 +136,7 @@ function drawCircle() {
   }
 
   for (let l = 0; l < lines; l++) {
-    const angle = (l / lines) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(angle) * maxRadius, Math.sin(angle) * maxRadius);
-    ctx.strokeStyle = `hsl(${hue + l * 30}, 100%, 70%)`;
-    ctx.stroke();
-  }
-
-  ctx.restore();
-}
-
-// --- 3. Heartbeat Mode (Hospital ECG Style with Threshold 120) ---
+    const angle = (l / lines) // --- 3. Heartbeat Mode (Starts from center, scrolls left) ---
 function drawHeartbeat() {
   analyser.getByteFrequencyData(freqArray);
   const beat = getBeatStrength();
@@ -164,26 +153,46 @@ function drawHeartbeat() {
     newY = midY + Math.sin(Date.now() / 100) * 2; // idle baseline
   }
 
+  // Add new point
   heartbeatData.push(newY);
 
-  if (heartbeatData.length > canvas.width) {
+  // Limit length
+  const maxLength = canvas.width;
+  if (heartbeatData.length > maxLength) {
     heartbeatData.shift();
   }
 
+  // Clear screen
   ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Start drawing from center, move left
+  const centerX = canvas.width / 2;
   ctx.beginPath();
   for (let i = 0; i < heartbeatData.length; i++) {
     const y = heartbeatData[i];
-    const x = i;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    const x = centerX - (heartbeatData.length - 1 - i); // move leftward
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   }
 
   ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
   ctx.lineWidth = 2;
   ctx.stroke();
+}* Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(angle) * maxRadius, Math.sin(angle) * maxRadius);
+    ctx.strokeStyle = `hsl(${hue + l * 30}, 100%, 70%)`;
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
+
 
 // --- 4. Galaxy Mode (Realistic, Beat Synced) ---
 function drawGalaxy() {
