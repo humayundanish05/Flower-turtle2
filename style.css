@@ -191,3 +191,60 @@ canvas {
     width: 100vw;
   }
 }
+
+.footer {
+  position: relative;
+  z-index: 2;
+  margin-top: 40px;
+  padding: 15px 20px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #0ff;
+  text-shadow:
+    0 0 5px #0ff,
+    0 0 10px #0ff,
+    0 0 20px #0ff;
+  background: rgba(0, 5, 15, 0.4);
+  border-top: 1px solid rgba(0, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.1);
+  animation: footerPulse 4s ease-in-out infinite;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.4s ease;
+}
+
+.footer:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px #0ff9, 0 0 40px #0ff4;
+}
+
+/* Shimmer Effect Overlay */
+.footer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #0ff8, transparent);
+  animation: shimmer 6s infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes footerPulse {
+  0% { text-shadow: 0 0 5px #0ff2, 0 0 10px #0ff4; }
+  50% { text-shadow: 0 0 10px #0ff8, 0 0 25px #0ffb; }
+  100% { text-shadow: 0 0 5px #0ff2, 0 0 10px #0ff4; }
+}
+
+@keyframes shimmer {
+  0% { left: -75%; }
+  100% { left: 125%; }
+    }
