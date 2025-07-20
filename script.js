@@ -136,11 +136,15 @@ function drawCircle() {
   }
 
   for (let l = 0; l < lines; l++) {
-    const angle = (l / lines) // --- 3. Heartbeat Mode (Starts from center, scrolls left) ---
+    const angle = (l / lines)
+    
+    
+// --- 3. Heartbeat Mode (Always centered, scrolls left) ---
 function drawHeartbeat() {
   analyser.getByteFrequencyData(freqArray);
   const beat = getBeatStrength();
   const midY = canvas.height / 2;
+  const centerX = canvas.width / 2;
   const hue = (beat * 5 + Date.now() / 50) % 360;
 
   let newY = midY;
@@ -153,12 +157,9 @@ function drawHeartbeat() {
     newY = midY + Math.sin(Date.now() / 100) * 2; // idle baseline
   }
 
-  // Add new point
+  // Push new point at the END (latest)
   heartbeatData.push(newY);
-
-  // Limit length
-  const maxLength = canvas.width;
-  if (heartbeatData.length > maxLength) {
+  if (heartbeatData.length > canvas.width) {
     heartbeatData.shift();
   }
 
@@ -166,12 +167,11 @@ function drawHeartbeat() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Start drawing from center, move left
-  const centerX = canvas.width / 2;
+  // Draw waveform so that the latest beat is at center of screen
   ctx.beginPath();
   for (let i = 0; i < heartbeatData.length; i++) {
     const y = heartbeatData[i];
-    const x = centerX - (heartbeatData.length - 1 - i); // move leftward
+    const x = centerX - (heartbeatData.length - 1 - i);
     if (i === 0) {
       ctx.moveTo(x, y);
     } else {
@@ -182,15 +182,6 @@ function drawHeartbeat() {
   ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
   ctx.lineWidth = 2;
   ctx.stroke();
-}* Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(angle) * maxRadius, Math.sin(angle) * maxRadius);
-    ctx.strokeStyle = `hsl(${hue + l * 30}, 100%, 70%)`;
-    ctx.stroke();
-  }
-
-  ctx.restore();
 }
 
 
