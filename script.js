@@ -159,7 +159,7 @@ function drawHeartbeat() {
   // Generate new Y point based on lower thresholds
   let newY = midY;
 
-  if (beat > 140) {
+  if (beat > 130) {
     // Simulate ECG spike more often
     newY = midY - (Math.random() * 30 + 20); // bigger spike
   } else if (beat > 70) {
