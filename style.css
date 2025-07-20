@@ -7,6 +7,7 @@
 
 body {
   background: radial-gradient(ellipse at center, #000010 0%, #000005 100%);
+  position: relative; /* Required for ::before blur layer */
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
@@ -18,7 +19,6 @@ body {
   overflow: hidden;
   transition: transform 0.2s ease;
 }
-
 /* Sigma Shake */
 body.shake {
   animation: screenShake 0.12s infinite;
@@ -172,4 +172,17 @@ canvas {
     height: 100vh;
     width: 100vw;
   }
+}
+
+/* Background Blur Layer */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  backdrop-filter: blur(6px); /* You can adjust this from 4px–10px */
+  -webkit-backdrop-filter: blur(6px); /* Safari support */
+  z-index: -2;
 }
