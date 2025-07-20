@@ -68,12 +68,7 @@ function triggerBeat(strength = 1) {
   }
 }
 
-// --- Main Drawing Loop ---
 
-// --- Setup Global Elements ---
-let stars = [];
-let dataArray = new Uint8Array(analyser.fftSize);
-let freqArray = new Uint8Array(analyser.frequencyBinCount);
 let heartbeatData = new Array(500).fill(canvas.height / 2); // ECG trail buffer
 
 // --- Helper Functions ---
@@ -294,3 +289,46 @@ window.addEventListener("load", () => {
   const initialTrack = document.getElementById("playlist").value;
   if (initialTrack) setupAudio(initialTrack);
 });
+
+// --- Master Draw Function ---
+function draw() {
+  if (!audioReady) return;
+
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  detectBeat();
+
+  // Optional screen shake for Sigma mode
+  if (sigmaActive && shakeFrame > 0) {
+    const dx = Math.random() * shakeIntensity - shakeIntensity / 2;
+    const dy = Math.random() * shakeIntensity - shakeIntensity / 2;
+    ctx.save();
+    ctx.translate(dx, dy);
+    shakeFrame--;
+  }
+
+  // Draw based on current mode
+  switch (currentMode) {
+    case "wave":
+      drawWave();
+      break;
+    case "circle":
+      drawCircle();
+      break;
+    case "heartbeat":
+      drawHeartbeat();
+      break;
+    case "galaxy":
+      drawGalaxy();
+      break;
+  }
+
+  if (sigmaActive) drawSigmaRing();
+
+  if (sigmaActive && shakeFrame > 0) {
+    ctx.restore(); // restore after screen shake
+  }
+
+  requestAnimationFrame(draw);
+}
