@@ -19,6 +19,20 @@ body {
   overflow: hidden;
   transition: transform 0.2s ease;
 }
+
+/* Background Blur Layer */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: -2;
+}
+
 /* Sigma Shake */
 body.shake {
   animation: screenShake 0.12s infinite;
@@ -117,7 +131,7 @@ canvas {
   box-shadow: 0 0 12px #ff0055;
 }
 
-/* Sigma Button Active (optional style toggle) */
+/* Sigma Button Active */
 #sigmaBtn.active {
   border-color: #ff0066;
   box-shadow: 0 0 15px #ff0066, inset 0 0 8px #ff0044;
@@ -172,17 +186,4 @@ canvas {
     height: 100vh;
     width: 100vw;
   }
-}
-
-/* Background Blur Layer */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  backdrop-filter: blur(6px); /* You can adjust this from 4px–10px */
-  -webkit-backdrop-filter: blur(6px); /* Safari support */
-  z-index: -2;
 }
