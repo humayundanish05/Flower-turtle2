@@ -114,29 +114,46 @@ function drawCircle() {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
   const maxRadius = Math.min(centerX, centerY) - 20;
-  const rings = 6;
-  const lines = 5;
 
+  const rings = 6;      // Number of circular layers
+  const spokes = 12;    // Number of radial lines
   const beat = getBeatStrength();
   const hue = (beat * 3 + Date.now() / 40) % 360;
 
   ctx.save();
   ctx.translate(centerX, centerY);
 
+  // Draw curly spiderweb rings
   for (let r = 1; r <= rings; r++) {
     ctx.beginPath();
-    for (let a = 0; a <= Math.PI * 2; a += 0.05) {
-      const radius = (r / rings) * maxRadius + Math.sin(a * 6 + beat / 10) * (5 + beat / 10);
+    for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+      const pulse = Math.sin(a * 6 + Date.now() / 300) * (2 + beat / 30);
+      const radius = (r / rings) * maxRadius + pulse;
       const x = Math.cos(a) * radius;
       const y = Math.sin(a) * radius;
-      ctx.lineTo(x, y);
+      if (a === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
-    ctx.strokeStyle = `hsl(${hue + r * 20}, 100%, 60%)`;
+    ctx.strokeStyle = `hsl(${hue + r * 30}, 100%, 60%)`;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  for (let l = 0; l < lines; l++) {
-    const angle = (l / lines)
+  // Draw radial lines (spokes)
+  for (let i = 0; i < spokes; i++) {
+    const angle = (i / spokes) * Math.PI * 2;
+    const x = Math.cos(angle) * maxRadius;
+    const y = Math.sin(angle) * maxRadius;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = `hsl(${hue + i * 20}, 100%, 50%)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
     
     
 // --- 3. Heartbeat Mode (Always centered, scrolls left) ---
