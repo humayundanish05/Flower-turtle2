@@ -70,8 +70,7 @@ canvas {
   padding: 20px;
   border-radius: 16px;
   background: rgba(0, 10, 30, 0.3); /* translucent dark */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Removed blur effect */
   border: 1px solid rgba(0, 255, 255, 0.1);
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
 }
