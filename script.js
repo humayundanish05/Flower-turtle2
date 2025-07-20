@@ -252,6 +252,7 @@ function drawGalaxy() {
 
 
 // --- Sigma Ring ---
+// --- Sigma Ring ---
 function drawSigmaRing() {
   ctx.save();
   ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -316,16 +317,20 @@ function draw() {
 
   detectBeat();
 
-  // Optional screen shake for Sigma mode
-  if (sigmaActive && shakeFrame > 0) {
-    const dx = Math.random() * shakeIntensity - shakeIntensity / 2;
-    const dy = Math.random() * shakeIntensity - shakeIntensity / 2;
-    ctx.save();
-    ctx.translate(dx, dy);
-    shakeFrame--;
+  // Apply Sigma screen shake (always save context if sigma is active)
+  if (sigmaActive) {
+    if (shakeFrame > 0) {
+      const dx = Math.random() * shakeIntensity - shakeIntensity / 2;
+      const dy = Math.random() * shakeIntensity - shakeIntensity / 2;
+      ctx.save();
+      ctx.translate(dx, dy);
+      shakeFrame--;
+    } else {
+      ctx.save(); // No shake offset, just prepare to restore later
+    }
   }
 
-  // Draw based on current mode
+  // Draw mode visuals
   switch (currentMode) {
     case "wave":
       drawWave();
@@ -341,10 +346,10 @@ function draw() {
       break;
   }
 
-  if (sigmaActive) drawSigmaRing();
-
-  if (sigmaActive && shakeFrame > 0) {
-    ctx.restore(); // restore after screen shake
+  // Draw Sigma ring after base visuals
+  if (sigmaActive) {
+    drawSigmaRing();
+    ctx.restore(); // Restore after all Sigma visuals are drawn
   }
 
   requestAnimationFrame(draw);
